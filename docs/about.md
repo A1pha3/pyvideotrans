@@ -18,7 +18,7 @@
 
 你可以向微信或支付宝二维码付款，备注你的github名称
 
-> **Donate URL at ko-fo.com:** https://ko-fi.com/jianchang512
+> **Donate URL at ko-fi.com:** https://ko-fi.com/jianchang512
 
 <img src="https://pyvideotrans.com/images/wx.png" width="200">
 

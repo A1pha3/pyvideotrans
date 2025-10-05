@@ -33,7 +33,7 @@ Default interface address: http://127.0.0.1:9011
 > 2=ChatTTS
 > 3=302.AI
 > 4=FishTTS
-> 5=Azure-TTS"
+> 5=Azure-TTS
 > 6=GPT-SoVITS
 > 7=clone-voice
 > 8=OpenAI TTS
@@ -67,7 +67,7 @@ Failure:
 requests.post("http://127.0.0.1:9011/tts", json={
      "name": "C:/users/c1/videos/zh0.srt",
      "voice_role": "zh-CN-YunjianNeural",
-     "target_language_code": "zh-cn",
+     "target_language": "zh-cn",
      "voice_rate": "+0%",
      "volume": "+0%",
      "pitch": "+0Hz",
@@ -184,7 +184,7 @@ Failure:
 requests.post("http://127.0.0.1:9011/recogn", json={
      "name": "C:/Users/c1/Videos/10ass.mp4",
      "recogn_type": 0,
-     "split_type": "overall",
+     "split_type": "all",
      "model_name": "tiny",
      "is_cuda": False,
      "detect_language": "zh",
@@ -276,7 +276,7 @@ Failure:
 requests.post("http://127.0.0.1:9011/trans_video", json={
      "name": "C:/Users/c1/Videos/10ass.mp4",
      "recogn_type": 0,
-     "split_type": "overall",
+     "split_type": "all",
      "model_name": "tiny",
      "detect_language": "zh",
      "translate_type": 0,

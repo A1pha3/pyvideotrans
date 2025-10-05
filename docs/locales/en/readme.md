@@ -1,8 +1,8 @@
-[简体中文](../../README.md) | English | [pt-BR](../pt-BR/README_pt-BR.md) | [Italian](../IT/README_IT.md) | [Spanish](../ES/README_ES.md)
+[简体中文](../../README.md) | English | [pt-BR](../pt-br/readme.md) | [Italian](../it/readme.md) | [Spanish](../es/readme.md)
 
 ---
 
-[👑Donate to this project](../about.md) | [Discord invitation link](https://discord.gg/y9gUweVCCJ)
+[👑Donate to this project](../../about.md) | [Discord invitation link](https://discord.gg/y9gUweVCCJ)
 
 ---
 
@@ -19,7 +19,7 @@
 >
 > Allows for the retention of background accompaniment music, etc. (based on uvr5)
 >
-> Supported languages: Simplified and Traditional Chinese, English, Korean, Japanese, Russian, French, German, Italian, Spanish, Portuguese, Vietnamese, Thai, Arabic, Turkish, Hungarian, Hindi, Ukrainian, Kazakh, Indonesian, Malay, Czech,Polish,Nl,sw
+> Supported languages: Simplified and Traditional Chinese, English, Korean, Japanese, Russian, French, German, Italian, Spanish, Portuguese, Vietnamese, Thai, Arabic, Turkish, Hungarian, Hindi, Ukrainian, Kazakh, Indonesian, Malay, Czech, Polish, Dutch, Swedish
 
 # Main Uses and Methods of Use
 
@@ -150,19 +150,14 @@ apt install python3.10
 
 curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
 
-<<<<<<< HEAD
-sudo update-alternatives --install /usr/bin/python python /usr/local/bin/python3.10  1
-=======
 
-sudo update-alternatives --install /usr/bin/python python /usr/local/bin/python3.10 
->>>>>>> 9485b1096d6a40a3fb6962a49df128397f10bdd5
+sudo update-alternatives --install /usr/bin/python python /usr/local/bin/python3.10  1
 
 sudo update-alternatives --config python
 
 apt-get install ffmpeg
 
 ```
-
 
 **Open any terminal and execute `python3 -V`, if the output is "3.10.4", it means the installation was successful; otherwise, it was not successful.**
 
@@ -203,7 +198,7 @@ apt-get install ffmpeg
 
    **Open a cmd, execute `python -V`, if the output is not `3.10.4`, it indicates an installation error or "Add to PATH" was not selected, please reinstall**
 
-1. Open https://github.com/git-for-windows/git/releases/download/v2.45.0.windows.1/Git-2.45.0-64-bit.exe, download Git, double-click and proceed with the installation steps.
+1. Open <https://github.com/git-for-windows/git/releases/download/v2.45.0.windows.1/Git-2.45.0-64-bit.exe>, download Git, double-click and proceed with the installation steps.
 2. Find a folder without spaces or Chinese characters, enter `cmd` in the address bar and press enter to open the terminal, all the following commands must be executed in this terminal.
 3. Execute `git clone https://github.com/jianchang512/pyvideotrans`
 4. Continue with `cd pyvideotrans`
@@ -303,6 +298,3 @@ Please visit https://pyvideotrans.com/guide.html
 4. [faster-whisper](https://github.com/SYSTRAN/faster-whisper)
 5. [openai-whisper](https://github.com/openai/whisper)
 6. [pydub](https://github.com/jiaaro/pydub)
-
-
-

@@ -1,8 +1,8 @@
-[简体中文](../../README.md) | [English](../EN/README_EN.md) | [pt-BR](../pt-BR/README_pt-BR.md) | [Italian](../IT/README_IT.md) | Spanish
+[简体中文](../../README.md) | [English](../en/readme.md) | [pt-BR](../pt-br/readme.md) | [Italian](../it/readme.md) | Spanish
 
 ---
 
-[👑Donar a este proyecto](../about.md) | [Enlace de invitación a Discord](https://discord.gg/mTh5Cu5Bqm) | Cuenta de WeChat: Buscar "pyvideotrans"
+[👑Donar a este proyecto](../../about.md) | [Enlace de invitación a Discord](https://discord.gg/mTh5Cu5Bqm) | Cuenta de WeChat: Buscar "pyvideotrans"
 
 ---
 
@@ -149,12 +149,8 @@ apt install python3.10
 
 curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
 
-<<<<<<< HEAD
-sudo update-alternatives --install /usr/bin/python python /usr/local/bin/python3.10  1
-=======
 
-sudo update-alternatives --install /usr/bin/python python /usr/local/bin/python3.10 
->>>>>>> 9485b1096d6a40a3fb6962a49df128397f10bdd5
+sudo update-alternatives --install /usr/bin/python python /usr/local/bin/python3.10  1
 
 sudo update-alternatives --config python
 
@@ -200,7 +196,7 @@ apt-get install ffmpeg
 
    **Abre un cmd y ejecuta `python -V`. Si la salida no es `3.10.4`, significa que hubo un error en la instalación o no se agregó a "PATH". Por favor, reinstala.**
 
-1. Abre https://github.com/git-for-windows/git/releases/download/v2.45.0.windows.1/Git-2.45.0-64-bit.exe, descarga Git y sigue las instrucciones de instalación.
+1. Abre <https://github.com/git-for-windows/git/releases/download/v2.45.0.windows.1/Git-2.45.0-64-bit.exe>, descarga Git y sigue las instrucciones de instalación.
 2. Elige un directorio sin espacios ni caracteres chinos, escribe `cmd` en la barra de direcciones y presiona Enter para abrir la terminal. Todos los comandos siguientes deben ser ejecutados en esta terminal.
 3. Ejecuta el comando `git clone https://github.com/jianchang512/pyvideotrans`
 4. Continúa con el comando `cd pyvideotrans`
