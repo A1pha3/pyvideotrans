@@ -1,1157 +1,632 @@
-# API接口文档
+# PyVideoTrans API 文档
 
-默认接口地址地址 http://127.0.0.1:9011
+PyVideoTrans 提供了丰富的 API 接口，支持程序化调用各种功能。本文档详细介绍了所有可用的 API。
 
-> 可通过在api.py(api.exe)同级目录下创建 `host.txt`, 修改ip和端口，例如 `host.txt` 内容如下
->
-> `127.0.0.1:9801`
->
-> 则接口地址将变为 http://127.0.0.1:9801
+## API 概述
 
-## 启动方法
+### 基本信息
 
-> 升级到v2.57+
+- **版本**: v3.80
+- **基础路径**: `/api/v1`
+- **内容类型**: `application/json`
+- **字符编码**: UTF-8
 
-1. 预打包版双击 `api.exe`,等待终端窗口显示 `API URL http://127.0.0.1:9011`
-2. 源码版执行 `python api.py`
+### 认证方式
 
-## 翻译/配音/识别渠道配置
+目前 API 主要用于本地调用，暂不需要认证。未来版本可能会添加 API Key 认证。
 
-某些渠道，例如翻译渠道：OpenAI ChatGPT/AzureGPT/Baidu/Tencent/DeepL等需要配置api url 和 key 等，如果要使用，请使用GUI界面在设置中配置相关信息
+## 核心 API
 
-除了 翻译渠道Google/FreeGoole/Microsoft，配音渠道edge-tts，识别模式faster-whisper/openai-whisper外，其他渠道均需要单独配置。请打开GUI界面在菜单栏-设置中进行配置。
+### 1. 视频翻译 API
 
-## 接口列表
+#### 开始翻译任务
 
-### `/tts` - 根据字幕合成配音接口
+```http
+POST /api/v1/translate
+Content-Type: application/json
 
-#### 请求数据类型
-`Content-Type: application/json`
-
-#### 请求参数
-
-| 参数名          | 数据类型 | 是否必选 | 默认值 | 可选值 | 描述 |
-| --------------- | -------- | -------- | ------ | ------ | ---- |
-| name            | 字符串   | 是       | 无     | 无     | 需要配音的srt字幕的绝对路径或合法的srt字幕格式内容 |
-| tts_type        | 数字     | 是       | 无     | 0-11   | 配音渠道，具体值对应渠道名称见下 |
-| voice_role      | 字符串   | 是       | 无     | - | 对应配音渠道的角色名.edge-tts/azure-tts/302.ai(azure模型)角色名根据所选目标语言不同而变化，具体见底部 |
-| target_language | 字符串   | 是       | 无     | 需要配音的语言类型代码 | 简体中文zh-cn，繁体zh-tw，英语en，法语fr，德语de，日语ja，韩语ko，俄语ru，西班牙语es，泰国语th，意大利语it，葡萄牙语pt，越南语vi，阿拉伯语ar，土耳其语tr，印地语hi，匈牙利语hu，乌克兰语uk，印尼语id，马来语ms，哈萨克语kk，捷克语cs，波兰语pl，荷兰语nl，瑞典语sv |
-| voice_rate      | 字符串   | 否       | 无     | 加速`+数字%`，减速`-数字%` | 语速加减值 |
-| volume          | 字符串   | 否       | 无     | 增大音量`+数字%`，降低音量`-数字%` | 音量变化值（仅配音渠道为edge-tts生效） |
-| pitch           | 字符串   | 否       | 无     | 调大音调`+数字Hz`,降低音量`-数字Hz` | 音调变化值（仅配音渠道为edge-tts生效） |
-| out_ext         | 字符串   | 否       | wav    | mp3\|wav\|flac\|aac | 输出配音文件类型 |
-| voice_autorate  | 布尔值   | 否       | False  | True\|False | 是否自动加快语速 |
-
-**tts_type 0-11分别代表**
-
-- 0=Edge-TTS
-- 1=CosyVoice
-- 2=ChatTTS
-- 3=302.AI
-- 4=FishTTS
-- 5=Azure-TTS
-- 6=GPT-SoVITS
-- 7=clone-voice
-- 8=OpenAI TTS
-- 9=Elevenlabs.io
-- 10=Google TTS
-- 11=自定义TTS API
-
-#### 返回数据类型
-JSON格式
-
-#### 返回示例
-成功时：
-```json
 {
-    "code": 0,
-    "msg": "ok",
-    "task_id": "任务id"
+  "input_file": "path/to/input.mp4",
+  "output_dir": "path/to/output",
+  "source_language": "zh",
+  "target_language": "en",
+  "model_name": "small",
+  "translate_service": "google",
+  "voice_service": "edge-tts",
+  "voice_name": "en-US-AriaNeural",
+  "subtitle_type": "srt",
+  "keep_background_music": true,
+  "voice_rate": 0,
+  "voice_volume": 100,
+  "background_music_volume": 50
 }
 ```
 
-失败时：
+**参数说明**:
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `input_file` | string | 是 | 输入视频文件路径 |
+| `output_dir` | string | 是 | 输出目录路径 |
+| `source_language` | string | 是 | 源语言代码 |
+| `target_language` | string | 是 | 目标语言代码 |
+| `model_name` | string | 否 | 语音识别模型名称 (默认: small) |
+| `translate_service` | string | 否 | 翻译服务提供商 (默认: google) |
+| `voice_service` | string | 否 | 语音合成服务 (默认: edge-tts) |
+| `voice_name` | string | 否 | 语音名称 |
+| `subtitle_type` | string | 否 | 字幕格式 (srt/vtt/ass) |
+| `keep_background_music` | boolean | 否 | 是否保留背景音乐 |
+| `voice_rate` | integer | 否 | 语音速度调整 (-50 到 50) |
+| `voice_volume` | integer | 否 | 语音音量 (0-100) |
+| `background_music_volume` | integer | 否 | 背景音乐音量 (0-100) |
+
+**响应示例**:
+
 ```json
 {
-    "code": 1,
-    "msg": "错误信息"
+  "success": true,
+  "task_id": "task_123456789",
+  "message": "翻译任务已开始",
+  "estimated_time": 300
 }
 ```
 
-#### 请求示例
-```python
-import requests
-res=requests.post("http://127.0.0.1:9011/tts", json={
-    "name": "C:/users/c1/videos/zh0.srt",
-    "voice_role": "zh-CN-YunjianNeural",
-    "target_language": "zh-cn",
-    "voice_rate": "+0%",
-    "volume": "+0%",
-    "pitch": "+0Hz",
-    "tts_type": "0",
-    "out_ext": "mp3",
-    "voice_autorate": True,
-})
-print(res.json())
+#### 查询任务状态
+
+```http
+GET /api/v1/task/{task_id}
 ```
 
-----
+**响应示例**:
 
-### `/translate_srt` - 字幕翻译接口
-
-#### 请求数据类型
-`Content-Type: application/json`
-
-#### 请求参数
-
-| 参数名            | 数据类型 | 是否必选 | 默认值 | 可选值 | 描述 |
-| ----------------- | -------- | -------- | ------ | ------ | ---- |
-| name              | 字符串   | 是       | 无     | 无     | 需要翻译的srt字幕的绝对路径或合法的srt字幕格式内容 |
-| translate_type    | 整数     | 是       | 无     | 0-14  | 0-14分别代表翻译渠道，详细见下 |
-| target_language   | 字符串   | 是       | 无     | - | 简体中文zh-cn，繁体zh-tw，英语en，法语fr，德语de，日语ja，韩语ko，俄语ru，西班牙语es，泰国语th，意大利语it，葡萄牙语pt，越南语vi，阿拉伯语ar，土耳其语tr，印地语hi，匈牙利语hu，乌克兰语uk，印尼语id，马来语ms，哈萨克语kk，捷克语cs，波兰语pl，荷兰语nl，瑞典语sv |
-| source_code       | 字符串   | 否       | 无     | - | 简体中文zh-cn，繁体zh-tw，英语en，法语fr，德语de，日语ja，韩语ko，俄语ru，西班牙语es，泰国语th，意大利语it，葡萄牙语pt，越南语vi，阿拉伯语ar，土耳其语tr，印地语hi，匈牙利语hu，乌克兰语uk，印尼语id，马来语ms，哈萨克语kk，捷克语cs，波兰语pl，荷兰语nl，瑞典语sv |
-
-**translate_type 翻译渠道 0-14**
-
-- 0=Google翻译
-- 1=微软翻译
-- 2=302.AI
-- 3=百度翻译
-- 4=DeepL
-- 5=DeepLx
-- 6=离线翻译OTT
-- 7=腾讯翻译
-- 8=OpenAI ChatGPT
-- 9=本地大模型及兼容AI
-- 10=字节火山引擎
-- 11=AzureAI GPT
-- 12=Gemini
-- 13=自定义翻译API
-- 14=FreeGoogle翻译
-
-#### 返回数据类型
-JSON格式
-
-#### 返回示例
-成功时：
 ```json
 {
-    "code": 0,
-    "msg": "ok",
-    "task_id": "任务id"
+  "success": true,
+  "task_id": "task_123456789",
+  "status": "processing",
+  "progress": 45,
+  "current_step": "语音识别",
+  "estimated_remaining": 180,
+  "output_files": []
 }
 ```
 
-失败时：
-```json
+**状态值**:
+- `pending`: 等待中
+- `processing`: 处理中
+- `completed`: 已完成
+- `failed`: 失败
+- `cancelled`: 已取消
+
+### 2. 语音识别 API
+
+#### 音频转文字
+
+```http
+POST /api/v1/speech-to-text
+Content-Type: application/json
+
 {
-    "code": 1,
-    "msg": "错误信息"
+  "input_file": "path/to/audio.wav",
+  "model_name": "small",
+  "language": "zh",
+  "output_format": "srt"
 }
 ```
 
-#### 请求示例
-```python
-import requests
-res=requests.post("http://127.0.0.1:9011/translate_srt", json={
-    "name": "C:/users/c1/videos/zh0.srt",
+**参数说明**:
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `input_file` | string | 是 | 输入音频/视频文件路径 |
+| `model_name` | string | 否 | 识别模型名称 |
+| `language` | string | 否 | 语言代码 (auto 表示自动检测) |
+| `output_format` | string | 否 | 输出格式 (srt/txt/json) |
+
+**响应示例**:
+
+```json
+{
+  "success": true,
+  "task_id": "stt_123456789",
+  "text": "识别出的文本内容",
+  "subtitle_file": "path/to/output.srt",
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 2.5,
+      "text": "第一段文字"
+    }
+  ]
+}
+```
+
+### 3. 文本翻译 API
+
+#### 翻译文本
+
+```http
+POST /api/v1/translate-text
+Content-Type: application/json
+
+{
+  "text": "要翻译的文本",
+  "source_language": "zh",
+  "target_language": "en",
+  "service": "google"
+}
+```
+
+**参数说明**:
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `text` | string | 是 | 要翻译的文本 |
+| `source_language` | string | 是 | 源语言代码 |
+| `target_language` | string | 是 | 目标语言代码 |
+| `service` | string | 否 | 翻译服务提供商 |
+
+**响应示例**:
+
+```json
+{
+  "success": true,
+  "original_text": "要翻译的文本",
+  "translated_text": "Text to translate",
+  "source_language": "zh",
+  "target_language": "en",
+  "service": "google"
+}
+```
+
+### 4. 语音合成 API
+
+#### 文字转语音
+
+```http
+POST /api/v1/text-to-speech
+Content-Type: application/json
+
+{
+  "text": "要合成的文本",
+  "language": "en",
+  "voice_name": "en-US-AriaNeural",
+  "service": "edge-tts",
+  "rate": 0,
+  "volume": 100,
+  "output_file": "path/to/output.wav"
+}
+```
+
+**参数说明**:
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `text` | string | 是 | 要合成的文本 |
+| `language` | string | 是 | 语言代码 |
+| `voice_name` | string | 否 | 语音名称 |
+| `service` | string | 否 | TTS 服务提供商 |
+| `rate` | integer | 否 | 语速调整 (-50 到 50) |
+| `volume` | integer | 否 | 音量 (0-100) |
+| `output_file` | string | 否 | 输出文件路径 |
+
+**响应示例**:
+
+```json
+{
+  "success": true,
+  "audio_file": "path/to/output.wav",
+  "duration": 5.2,
+  "voice_info": {
+    "name": "en-US-AriaNeural",
+    "language": "en-US",
+    "gender": "Female"
+  }
+}
+```
+
+### 5. 系统信息 API
+
+#### 获取系统状态
+
+```http
+GET /api/v1/system/status
+```
+
+**响应示例**:
+
+```json
+{
+  "success": true,
+  "version": "v3.80",
+  "system": {
+    "os": "Windows 10",
+    "python_version": "3.10.4",
+    "cpu_count": 8,
+    "memory_total": "16 GB",
+    "memory_available": "8 GB"
+  },
+  "gpu": {
+    "available": true,
+    "name": "NVIDIA RTX 3080",
+    "memory": "10 GB",
+    "cuda_version": "11.8"
+  },
+  "models": {
+    "loaded": ["small", "medium"],
+    "available": ["tiny", "base", "small", "medium", "large"]
+  }
+}
+```
+
+#### 获取支持的语言
+
+```http
+GET /api/v1/system/languages
+```
+
+**响应示例**:
+
+```json
+{
+  "success": true,
+  "languages": [
+    {
+      "code": "zh",
+      "name": "中文",
+      "english_name": "Chinese"
+    },
+    {
+      "code": "en",
+      "name": "English",
+      "english_name": "English"
+    }
+  ]
+}
+```
+
+#### 获取可用模型
+
+```http
+GET /api/v1/system/models
+```
+
+**响应示例**:
+
+```json
+{
+  "success": true,
+  "models": {
+    "speech_recognition": [
+      {
+        "name": "tiny",
+        "size": "64MB",
+        "languages": ["multilingual"],
+        "loaded": false
+      },
+      {
+        "name": "small",
+        "size": "415MB",
+        "languages": ["multilingual"],
+        "loaded": true
+      }
+    ],
+    "translation": [
+      {
+        "name": "google",
+        "type": "online",
+        "languages": 100
+      },
+      {
+        "name": "deepl",
+        "type": "online",
+        "languages": 30
+      }
+    ],
+    "text_to_speech": [
+      {
+        "name": "edge-tts",
+        "type": "online",
+        "voices": 200
+      }
+    ]
+  }
+}
+```
+
+## 批量处理 API
+
+### 批量翻译
+
+```http
+POST /api/v1/batch/translate
+Content-Type: application/json
+
+{
+  "files": [
+    "path/to/video1.mp4",
+    "path/to/video2.mp4"
+  ],
+  "output_dir": "path/to/output",
+  "config": {
+    "source_language": "zh",
     "target_language": "en",
-    "translate_type": 0
-})
-print(res.json())
-```
-
-----
-
-### `/recogn` - 语音识别、音视频转字幕接口
-
-#### 请求数据类型
-`Content-Type: application/json`
-
-#### 请求参数
-
-| 参数名            | 数据类型 | 是否必选 | 默认值 | 可选值 | 描述 |
-| ----------------- | -------- | -------- | ------ | ------ | ---- |
-| name              | 字符串   | 是       | 无     | 无     | 需要翻译的音频或视频的绝对路径 |
-| recogn_type       | 数字     | 是       | 无     | 0-6    | 语音识别模式,0=faster-whisper本地模型识别，1=openai-whisper本地模型识别，2=Google识别api，3=zh_recogn中文识别，4=豆包模型识别，5=自定义识别API，6=OpenAI识别API |
-| model_name        | 字符串   | 是       | 无     | -  | 当选择faster-whisper/openai-whisper模式时必须填写模型名字 |
-| detect_language   | 字符串   | 是       | 无     | - | 中文zh，英语en，法语fr，德语de，日语ja，韩语ko，俄语ru，西班牙语es，泰国语th，意大利语it，葡萄牙语pt，越南语vi，阿拉伯语ar，土耳其语tr，印地语hi，匈牙利语hu，乌克兰语uk，印尼语id，马来语ms，哈萨克语kk，捷克语cs，波兰语pl，荷兰语nl，瑞典语sv |
-| split_type        | 字符串   | 否       | all    | all\|avg | 分割类型，all=整体识别，avg=均等分割 |
-| is_cuda           | 布尔值   | 否       | False  | True\|False | 是否启用CUDA加速 |
-
-#### 返回数据类型
-JSON格式
-
-#### 返回示例
-成功时：
-```json
-{
-    "code": 0,
-    "msg": "ok",
-    "task_id": "任务id"
+    "model_name": "small"
+  }
 }
 ```
 
-失败时：
-```json
+### 批量字幕生成
+
+```http
+POST /api/v1/batch/subtitles
+Content-Type: application/json
+
 {
-    "code": 1,
-    "msg": "错误信息"
+  "files": [
+    "path/to/audio1.wav",
+    "path/to/video2.mp4"
+  ],
+  "output_dir": "path/to/output",
+  "config": {
+    "model_name": "small",
+    "language": "auto",
+    "format": "srt"
+  }
 }
 ```
 
-#### 请求示例
+## 错误处理
+
+### 错误响应格式
+
+```json
+{
+  "success": false,
+  "error_code": "INVALID_FILE",
+  "message": "指定的文件不存在或无法访问",
+  "details": {
+    "file": "path/to/missing.mp4",
+    "timestamp": "2024-01-01T12:00:00Z"
+  }
+}
+```
+
+### 常见错误代码
+
+| 错误代码 | HTTP 状态码 | 描述 |
+|----------|-------------|------|
+| `INVALID_FILE` | 400 | 文件不存在或格式不支持 |
+| `INVALID_LANGUAGE` | 400 | 不支持的语言代码 |
+| `MODEL_NOT_FOUND` | 404 | 指定的模型未找到 |
+| `INSUFFICIENT_MEMORY` | 500 | 内存不足 |
+| `PROCESSING_ERROR` | 500 | 处理过程中发生错误 |
+| `NETWORK_ERROR` | 503 | 网络连接错误 |
+
+## 使用示例
+
+### Python 示例
+
 ```python
 import requests
-res=requests.post("http://127.0.0.1:9011/recogn", json={
-    "name": "C:/Users/c1/Videos/10ass.mp4",
-    "recogn_type": 0,
-    "split_type": "all",
-    "model_name": "tiny",
-    "is_cuda": False,
-    "detect_language": "zh",
-})
-print(res.json())
+import json
+
+class PyVideoTransAPI:
+    def __init__(self, base_url="http://localhost:8080"):
+        self.base_url = base_url
+    
+    def translate_video(self, input_file, output_dir, source_lang, target_lang):
+        """翻译视频"""
+        url = f"{self.base_url}/api/v1/translate"
+        data = {
+            "input_file": input_file,
+            "output_dir": output_dir,
+            "source_language": source_lang,
+            "target_language": target_lang
+        }
+        
+        response = requests.post(url, json=data)
+        return response.json()
+    
+    def get_task_status(self, task_id):
+        """获取任务状态"""
+        url = f"{self.base_url}/api/v1/task/{task_id}"
+        response = requests.get(url)
+        return response.json()
+    
+    def speech_to_text(self, audio_file, language="auto"):
+        """语音转文字"""
+        url = f"{self.base_url}/api/v1/speech-to-text"
+        data = {
+            "input_file": audio_file,
+            "language": language,
+            "output_format": "srt"
+        }
+        
+        response = requests.post(url, json=data)
+        return response.json()
+
+# 使用示例
+api = PyVideoTransAPI()
+
+# 开始翻译任务
+result = api.translate_video(
+    input_file="example.mp4",
+    output_dir="./output",
+    source_lang="zh",
+    target_lang="en"
+)
+
+if result["success"]:
+    task_id = result["task_id"]
+    print(f"任务已开始，ID: {task_id}")
+    
+    # 查询任务状态
+    status = api.get_task_status(task_id)
+    print(f"任务状态: {status['status']}")
 ```
 
-----
+### JavaScript 示例
 
-### `/trans_video` - 视频完整翻译接口
-
-#### 请求数据类型
-`Content-Type: application/json`
-
-#### 请求参数
-
-| 参数名            | 数据类型 | 是否必选 | 默认值 | 可选值 | 描述 |
-| ----------------- | -------- | -------- | ------ | ------ | ---- |
-| name              | 字符串   | 是       | 无     | 无     | 需要翻译的音频或视频的绝对路径 |
-| recogn_type       | 数字     | 是       | 无     | 0-6    | 语音识别模式,0=faster-whisper本地模型识别，1=openai-whisper本地模型识别，2=Google识别api，3=zh_recogn中文识别，4=豆包模型识别，5=自定义识别API，6=OpenAI识别API |
-| model_name        | 字符串   | 是       | 无     | - | 当选择faster-whisper/openai-whisper模式时必须填写模型名字 |
-| translate_type    | 整数     | 是       | 无     | 0-14 | 翻译渠道见下 |
-| target_language   | 字符串   | 是       | 无     | - | 翻译到的目标语言，简中zh-cn，繁中zh-tw，英语en，法语fr，德语de，日语ja，韩语ko，俄语ru，西班牙语es，泰国语th，意大利语it，葡萄牙语pt，越南语vi，阿拉伯语ar，土耳其语tr，印地语hi，匈牙利语hu，乌克兰语uk，印尼语id，马来语ms，哈萨克语kk，捷克语cs，波兰语pl，荷兰语nl，瑞典语sv |
-| source_language   | 字符串   | 是       | 无     | - | 音频中人类发声语言，简中zh-cn，繁中zh-tw，英语en，法语fr，德语de，日语ja，韩语ko，俄语ru，西班牙语es，泰国语th，意大利语it，葡萄牙语pt，越南语vi，阿拉伯语ar，土耳其语tr，印地语hi，匈牙利语hu，乌克兰语uk，印尼语id，马来语ms，哈萨克语kk，捷克语cs，波兰语pl，荷兰语nl，瑞典语sv |
-| tts_type          | 数字     | 是       | 无     | 0-11   | 配音渠道见下 |
-| voice_role        | 字符串   | 是       | 无     | - | 对应配音渠道的角色名.edge-tts/azure-tts/302.ai(azure模型)角色名根据所选目标语言不同而变化，具体见底部 |
-| voice_rate        | 字符串   | 否       | 无     | 加速`+数字%`，减速`-数字%` | 语速加减值 |
-| volume            | 字符串   | 否       | 无     | 增大音量`+数字%`，降低音量`-数字%` | 音量变化值（仅配音渠道为edge-tts生效） |
-| pitch             | 字符串   | 否       | 无     | 调大音调`+数字Hz`,降低音量`-数字Hz` | 音调变化值（仅配音渠道为edge-tts生效） |
-| out_ext           | 字符串   | 否       | wav    | mp3\|wav\|flac\|aac | 输出配音文件类型 |
-| voice_autorate    | 布尔值   | 否       | False  | True\|False | 是否自动加快语速 |
-| subtitle_type     | 整数     | 否       | 0      | 0-4    | 字幕嵌入类型 字幕嵌入类型，0=不嵌入字幕，1=嵌入硬字幕，2=嵌入软字幕，3=嵌入双硬字幕，4=嵌入双软字幕 |
-| append_video      | 布尔值   | 否       | False  | True\|False | 是否延长视频末尾 |
-| only_video        | 布尔值   | 否       | False  | True\|False | 是否只生成视频文件 |
-
-**translate_type 翻译渠道 0-14**
-
-- 0=Google翻译
-- 1=微软翻译
-- 2=302.AI
-- 3=百度翻译
-- 4=DeepL
-- 5=DeepLx
-- 6=离线翻译OTT
-- 7=腾讯翻译
-- 8=OpenAI ChatGPT
-- 9=本地大模型及兼容AI
-- 10=字节火山引擎
-- 11=AzureAI GPT
-- 12=Gemini
-- 13=自定义翻译API
-- 14=FreeGoogle翻译
-
-**tts_type配音渠道 0-11分别代表**
-
-- 0=Edge-TTS
-- 1=CosyVoice
-- 2=ChatTTS
-- 3=302.AI
-- 4=FishTTS
-- 5=Azure-TTS
-- 6=GPT-SoVITS
-- 7=clone-voice
-- 8=OpenAI TTS
-- 9=Elevenlabs.io
-- 10=Google TTS
-- 11=自定义TTS API
-
-#### 返回数据类型
-JSON格式
-
-#### 返回示例
-成功时：
-```json
-{
-    "code": 0,
-    "msg": "ok",
-    "task_id": "任务id"
+```javascript
+class PyVideoTransAPI {
+    constructor(baseUrl = 'http://localhost:8080') {
+        this.baseUrl = baseUrl;
+    }
+    
+    async translateVideo(inputFile, outputDir, sourceLang, targetLang) {
+        const response = await fetch(`${this.baseUrl}/api/v1/translate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                input_file: inputFile,
+                output_dir: outputDir,
+                source_language: sourceLang,
+                target_language: targetLang
+            })
+        });
+        
+        return await response.json();
+    }
+    
+    async getTaskStatus(taskId) {
+        const response = await fetch(`${this.baseUrl}/api/v1/task/${taskId}`);
+        return await response.json();
+    }
+    
+    async speechToText(audioFile, language = 'auto') {
+        const response = await fetch(`${this.baseUrl}/api/v1/speech-to-text`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                input_file: audioFile,
+                language: language,
+                output_format: 'srt'
+            })
+        });
+        
+        return await response.json();
+    }
 }
-```
 
-失败时：
-```json
-{
-    "code": 1,
-    "msg": "错误信息"
-}
-```
+// 使用示例
+const api = new PyVideoTransAPI();
 
-#### 请求示例
-```python
-import requests
-res=requests.post("http://127.0.0.1:9011/trans_video", json={
-    "name": "C:/Users/c1/Videos/10ass.mp4",
-    "recogn_type": 0,
-    "split_type": "all",
-    "model_name": "tiny",
-    "detect_language": "zh",
-    "translate_type": 0,
-    "source_language": "zh-cn",
-    "target_language": "en",
-    "tts_type": 0,
-    "voice_role": "zh-CN-YunjianNeural",
-    "voice_rate": "+0%",
-    "volume": "+0%",
-    "pitch": "+0Hz",
-    "voice_autorate": True,
-    "video_autorate": True,
-    "is_separate": False,
-    "back_audio": "",
-    "subtitle_type": 1,
-    "append_video": False,
-    "is_cuda": False,
-})
-print(res.json())
-```
-
-----
-
-### `/task_status` - 获取任务进度接口
-
-#### 请求数据类型
-`GET` 或 `POST`
-
-#### 请求参数
-
-| 参数名          | 数据类型 | 是否必选 | 描述 |
-| --------------- | -------- | -------- | ---- |
-| task_id         | 字符串   | 是       | 任务id |
-
-#### 返回数据类型
-JSON格式
-
-#### 返回示例
-进行中时：
-```json
-{
-    "code": -1,
-    "msg": "正在合成声音"
-}
-```
-
-成功时：
-```json
-{
-    "code": 0,
-    "msg": "ok",
-    "data": {
-        "absolute_path": ["/data/1.srt", "/data/1.mp4"],
-        "url": ["http://127.0.0.1:9011/task_id/1.srt"]
+async function translateExample() {
+    try {
+        const result = await api.translateVideo(
+            'example.mp4',
+            './output',
+            'zh',
+            'en'
+        );
+        
+        if (result.success) {
+            console.log(`任务已开始，ID: ${result.task_id}`);
+            
+            // 轮询任务状态
+            const checkStatus = async () => {
+                const status = await api.getTaskStatus(result.task_id);
+                console.log(`任务状态: ${status.status}`);
+                
+                if (status.status === 'processing') {
+                    setTimeout(checkStatus, 5000); // 5秒后再次检查
+                }
+            };
+            
+            checkStatus();
+        }
+    } catch (error) {
+        console.error('API 调用失败:', error);
     }
 }
 ```
 
-失败时：
-```json
-{
-    "code": 1,
-    "msg": "不存在该任务"
-}
-```
+## 语言代码参考
 
-#### 请求示例
-```python
-import requests
-res=requests.get("http://127.0.0.1:9011/task_status?task_id=06c238d250f0b51248563c405f1d7294")
-print(res.json())
-```
+### 支持的语言代码
+
+| 语言 | 代码 | 语言 | 代码 |
+|------|------|------|------|
+| 中文(简体) | zh | 英语 | en |
+| 中文(繁体) | zh-TW | 日语 | ja |
+| 韩语 | ko | 法语 | fr |
+| 德语 | de | 西班牙语 | es |
+| 俄语 | ru | 意大利语 | it |
+| 葡萄牙语 | pt | 阿拉伯语 | ar |
+| 泰语 | th | 越南语 | vi |
+| 土耳其语 | tr | 荷兰语 | nl |
+
+## 服务提供商配置
+
+### 翻译服务
+
+| 服务商 | 代码 | 配置要求 |
+|--------|------|----------|
+| Google Translate | google | 无需配置 |
+| Microsoft Translator | microsoft | API Key |
+| DeepL | deepl | API Key |
+| ChatGPT | chatgpt | OpenAI API Key |
+| Azure AI | azure | Azure 订阅 |
+
+### 语音合成服务
+
+| 服务商 | 代码 | 配置要求 |
+|--------|------|----------|
+| Microsoft Edge TTS | edge-tts | 无需配置 |
+| Google TTS | google-tts | 无需配置 |
+| Azure AI TTS | azure-tts | Azure 订阅 |
+| OpenAI TTS | openai-tts | OpenAI API Key |
+| ElevenLabs | elevenlabs | API Key |
+
+## 限制和注意事项
+
+### 文件大小限制
+
+- 单个视频文件: 最大 2GB
+- 单个音频文件: 最大 500MB
+- 批量处理: 最大 10 个文件
+
+### 并发限制
+
+- 同时处理任务数: 最大 3 个
+- API 调用频率: 每分钟最大 100 次
+
+### 支持的文件格式
+
+**视频格式**:
+- MP4, AVI, MOV, MKV, FLV, WMV, 3GP
+
+**音频格式**:
+- MP3, WAV, FLAC, AAC, OGG, M4A
+
+**字幕格式**:
+- SRT, VTT, ASS, SSA
+
+## 更新日志
+
+### v3.80 (当前版本)
+- 新增批量处理 API
+- 改进错误处理机制
+- 优化性能和稳定性
+
+### v3.70
+- 新增系统信息 API
+- 支持更多语音合成服务
+- 修复已知问题
+
+## 获取帮助
+
+如果您在使用 API 时遇到问题：
+
+- [GitHub Issues](https://github.com/jianchang512/pyvideotrans/issues)
+- [Discord 社区](https://discord.gg/y9gUweVCCJ)
+- [官方文档](https://pyvideotrans.com)
 
 ---
 
-## 翻译渠道数字对应 translate_type   0-14
-
-- 0=Google翻译
-- 1=微软翻译
-- 2=302.AI
-- 3=百度翻译
-- 4=DeepL
-- 5=DeepLx
-- 6=离线翻译OTT
-- 7=腾讯翻译
-- 8=OpenAI ChatGPT
-- 9=本地大模型及兼容AI
-- 10=字节火山引擎
-- 11=AzureAI GPT
-- 12=Gemini
-- 13=自定义翻译API
-- 14=FreeGoogle翻译
-
-## 配音渠道（tts_type） 0-11 对应名称
-- 0=Edge-TTS
-- 1=CosyVoice
-- 2=ChatTTS
-- 3=302.AI
-- 4=FishTTS
-- 5=Azure-TTS
-- 6=GPT-SoVITS
-- 7=clone-voice
-- 8=OpenAI TTS
-- 9=Elevenlabs.io
-- 10=Google TTS
-- 11=自定义TTS API
-
-
-## edge-tts 语言代码和角色名映射
-
-```
-{
-  "ar": [
-    "No",
-    "ar-DZ-AminaNeural",
-    "ar-DZ-IsmaelNeural",
-    "ar-BH-AliNeural",
-    "ar-BH-LailaNeural",
-    "ar-EG-SalmaNeural",
-    "ar-EG-ShakirNeural",
-    "ar-IQ-BasselNeural",
-    "ar-IQ-RanaNeural",
-    "ar-JO-SanaNeural",
-    "ar-JO-TaimNeural",
-    "ar-KW-FahedNeural",
-    "ar-KW-NouraNeural",
-    "ar-LB-LaylaNeural",
-    "ar-LB-RamiNeural",
-    "ar-LY-ImanNeural",
-    "ar-LY-OmarNeural",
-    "ar-MA-JamalNeural",
-    "ar-MA-MounaNeural",
-    "ar-OM-AbdullahNeural",
-    "ar-OM-AyshaNeural",
-    "ar-QA-AmalNeural",
-    "ar-QA-MoazNeural",
-    "ar-SA-HamedNeural",
-    "ar-SA-ZariyahNeural",
-    "ar-SY-AmanyNeural",
-    "ar-SY-LaithNeural",
-    "ar-TN-HediNeural",
-    "ar-TN-ReemNeural",
-    "ar-AE-FatimaNeural",
-    "ar-AE-HamdanNeural",
-    "ar-YE-MaryamNeural",
-    "ar-YE-SalehNeural"
-  ],
-  "zh": [
-    "No",
-    "zh-HK-HiuGaaiNeural",
-    "zh-HK-HiuMaanNeural",
-    "zh-HK-WanLungNeural",
-    "zh-CN-XiaoxiaoNeural",
-    "zh-CN-XiaoyiNeural",
-    "zh-CN-YunjianNeural",
-    "zh-CN-YunxiNeural",
-    "zh-CN-YunxiaNeural",
-    "zh-CN-YunyangNeural",
-    "zh-CN-liaoning-XiaobeiNeural",
-    "zh-TW-HsiaoChenNeural",
-    "zh-TW-YunJheNeural",
-    "zh-TW-HsiaoYuNeural",
-    "zh-CN-shaanxi-XiaoniNeural"
-  ],
-  "cs": [
-    "No",
-    "cs-CZ-AntoninNeural",
-    "cs-CZ-VlastaNeural"
-  ],
-  "nl": [
-    "No",
-    "nl-BE-ArnaudNeural",
-    "nl-BE-DenaNeural",
-    "nl-NL-ColetteNeural",
-    "nl-NL-FennaNeural",
-    "nl-NL-MaartenNeural"
-  ],
-  "en": [
-    "No",
-    "en-AU-NatashaNeural",
-    "en-AU-WilliamNeural",
-    "en-CA-ClaraNeural",
-    "en-CA-LiamNeural",
-    "en-HK-SamNeural",
-    "en-HK-YanNeural",
-    "en-IN-NeerjaExpressiveNeural",
-    "en-IN-NeerjaNeural",
-    "en-IN-PrabhatNeural",
-    "en-IE-ConnorNeural",
-    "en-IE-EmilyNeural",
-    "en-KE-AsiliaNeural",
-    "en-KE-ChilembaNeural",
-    "en-NZ-MitchellNeural",
-    "en-NZ-MollyNeural",
-    "en-NG-AbeoNeural",
-    "en-NG-EzinneNeural",
-    "en-PH-JamesNeural",
-    "en-US-AvaNeural",
-    "en-US-AndrewNeural",
-    "en-US-EmmaNeural",
-    "en-US-BrianNeural",
-    "en-PH-RosaNeural",
-    "en-SG-LunaNeural",
-    "en-SG-WayneNeural",
-    "en-ZA-LeahNeural",
-    "en-ZA-LukeNeural",
-    "en-TZ-ElimuNeural",
-    "en-TZ-ImaniNeural",
-    "en-GB-LibbyNeural",
-    "en-GB-MaisieNeural",
-    "en-GB-RyanNeural",
-    "en-GB-SoniaNeural",
-    "en-GB-ThomasNeural",
-    "en-US-AnaNeural",
-    "en-US-AriaNeural",
-    "en-US-ChristopherNeural",
-    "en-US-EricNeural",
-    "en-US-GuyNeural",
-    "en-US-JennyNeural",
-    "en-US-MichelleNeural",
-    "en-US-RogerNeural",
-    "en-US-SteffanNeural"
-  ],
-  "fr": [
-    "No",
-    "fr-BE-CharlineNeural",
-    "fr-BE-GerardNeural",
-    "fr-CA-ThierryNeural",
-    "fr-CA-AntoineNeural",
-    "fr-CA-JeanNeural",
-    "fr-CA-SylvieNeural",
-    "fr-FR-VivienneMultilingualNeural",
-    "fr-FR-RemyMultilingualNeural",
-    "fr-FR-DeniseNeural",
-    "fr-FR-EloiseNeural",
-    "fr-FR-HenriNeural",
-    "fr-CH-ArianeNeural",
-    "fr-CH-FabriceNeural"
-  ],
-  "de": [
-    "No",
-    "de-AT-IngridNeural",
-    "de-AT-JonasNeural",
-    "de-DE-SeraphinaMultilingualNeural",
-    "de-DE-FlorianMultilingualNeural",
-    "de-DE-AmalaNeural",
-    "de-DE-ConradNeural",
-    "de-DE-KatjaNeural",
-    "de-DE-KillianNeural",
-    "de-CH-JanNeural",
-    "de-CH-LeniNeural"
-  ],
-  "hi": [
-    "No",
-    "hi-IN-MadhurNeural",
-    "hi-IN-SwaraNeural"
-  ],
-  "hu": [
-    "No",
-    "hu-HU-NoemiNeural",
-    "hu-HU-TamasNeural"
-  ],
-  "id": [
-    "No",
-    "id-ID-ArdiNeural",
-    "id-ID-GadisNeural"
-  ],
-  "it": [
-    "No",
-    "it-IT-GiuseppeNeural",
-    "it-IT-DiegoNeural",
-    "it-IT-ElsaNeural",
-    "it-IT-IsabellaNeural"
-  ],
-  "ja": [
-    "No",
-    "ja-JP-KeitaNeural",
-    "ja-JP-NanamiNeural"
-  ],
-  "kk": [
-    "No",
-    "kk-KZ-AigulNeural",
-    "kk-KZ-DauletNeural"
-  ],
-  "ko": [
-    "No",
-    "ko-KR-HyunsuNeural",
-    "ko-KR-InJoonNeural",
-    "ko-KR-SunHiNeural"
-  ],
-  "ms": [
-    "No",
-    "ms-MY-OsmanNeural",
-    "ms-MY-YasminNeural"
-  ],
-  "pl": [
-    "No",
-    "pl-PL-MarekNeural",
-    "pl-PL-ZofiaNeural"
-  ],
-  "pt": [
-    "No",
-    "pt-BR-ThalitaNeural",
-    "pt-BR-AntonioNeural",
-    "pt-BR-FranciscaNeural",
-    "pt-PT-DuarteNeural",
-    "pt-PT-RaquelNeural"
-  ],
-  "ru": [
-    "No",
-    "ru-RU-DmitryNeural",
-    "ru-RU-SvetlanaNeural"
-  ],
-  "es": [
-    "No",
-    "es-AR-ElenaNeural",
-    "es-AR-TomasNeural",
-    "es-BO-MarceloNeural",
-    "es-BO-SofiaNeural",
-    "es-CL-CatalinaNeural",
-    "es-CL-LorenzoNeural",
-    "es-ES-XimenaNeural",
-    "es-CO-GonzaloNeural",
-    "es-CO-SalomeNeural",
-    "es-CR-JuanNeural",
-    "es-CR-MariaNeural",
-    "es-CU-BelkysNeural",
-    "es-CU-ManuelNeural",
-    "es-DO-EmilioNeural",
-    "es-DO-RamonaNeural",
-    "es-EC-AndreaNeural",
-    "es-EC-LuisNeural",
-    "es-SV-LorenaNeural",
-    "es-SV-RodrigoNeural",
-    "es-GQ-JavierNeural",
-    "es-GQ-TeresaNeural",
-    "es-GT-AndresNeural",
-    "es-GT-MartaNeural",
-    "es-HN-CarlosNeural",
-    "es-HN-KarlaNeural",
-    "es-MX-DaliaNeural",
-    "es-MX-JorgeNeural",
-    "es-NI-FedericoNeural",
-    "es-NI-YolandaNeural",
-    "es-PA-MargaritaNeural",
-    "es-PA-RobertoNeural",
-    "es-PY-MarioNeural",
-    "es-PY-TaniaNeural",
-    "es-PE-AlexNeural",
-    "es-PE-CamilaNeural",
-    "es-PR-KarinaNeural",
-    "es-PR-VictorNeural",
-    "es-ES-AlvaroNeural",
-    "es-ES-ElviraNeural",
-    "es-US-AlonsoNeural",
-    "es-US-PalomaNeural",
-    "es-UY-MateoNeural",
-    "es-UY-ValentinaNeural",
-    "es-VE-PaolaNeural",
-    "es-VE-SebastianNeural"
-  ],
-  "sv": [
-    "No",
-    "sv-SE-MattiasNeural",
-    "sv-SE-SofieNeural"
-  ],
-  "th": [
-    "No",
-    "th-TH-NiwatNeural",
-    "th-TH-PremwadeeNeural"
-  ],
-  "tr": [
-    "No",
-    "tr-TR-AhmetNeural",
-    "tr-TR-EmelNeural"
-  ],
-  "uk": [
-    "No",
-    "uk-UA-OstapNeural",
-    "uk-UA-PolinaNeural"
-  ],
-  "vi": [
-    "No",
-    "vi-VN-HoaiMyNeural",
-    "vi-VN-NamMinhNeural"
-  ]
-}
-```
-
-## Azure-tts 及 302.ai选择azure模型时语言代码和角色名映射
-```
-{
-  "ar": [
-    "No",
-    "ar-AE-FatimaNeural",
-    "ar-AE-HamdanNeural",
-    "ar-BH-LailaNeural",
-    "ar-BH-AliNeural",
-    "ar-DZ-AminaNeural",
-    "ar-DZ-IsmaelNeural",
-    "ar-EG-SalmaNeural",
-    "ar-EG-ShakirNeural",
-    "ar-IQ-RanaNeural",
-    "ar-IQ-BasselNeural",
-    "ar-JO-SanaNeural",
-    "ar-JO-TaimNeural",
-    "ar-KW-NouraNeural",
-    "ar-KW-FahedNeural",
-    "ar-LB-LaylaNeural",
-    "ar-LB-RamiNeural",
-    "ar-LY-ImanNeural",
-    "ar-LY-OmarNeural",
-    "ar-MA-MounaNeural",
-    "ar-MA-JamalNeural",
-    "ar-OM-AyshaNeural",
-    "ar-OM-AbdullahNeural",
-    "ar-QA-AmalNeural",
-    "ar-QA-MoazNeural",
-    "ar-SA-ZariyahNeural",
-    "ar-SA-HamedNeural",
-    "ar-SY-AmanyNeural",
-    "ar-SY-LaithNeural",
-    "ar-TN-ReemNeural",
-    "ar-TN-HediNeural",
-    "ar-YE-MaryamNeural",
-    "ar-YE-SalehNeural"
-  ],
-
-  "cs": [
-    "No",
-    "cs-CZ-VlastaNeural",
-    "cs-CZ-AntoninNeural"
-  ],
-
-  "de": [
-    "No",
-    "de-AT-IngridNeural",
-    "de-AT-JonasNeural",
-    "de-CH-LeniNeural",
-    "de-CH-JanNeural",
-    "de-DE-KatjaNeural",
-    "de-DE-ConradNeural",
-    "de-DE-AmalaNeural",
-    "de-DE-BerndNeural",
-    "de-DE-ChristophNeural",
-    "de-DE-ElkeNeural",
-    "de-DE-GiselaNeural",
-    "de-DE-KasperNeural",
-    "de-DE-KillianNeural",
-    "de-DE-KlarissaNeural",
-    "de-DE-KlausNeural",
-    "de-DE-LouisaNeural",
-    "de-DE-MajaNeural",
-    "de-DE-RalfNeural",
-    "de-DE-TanjaNeural",
-    "de-DE-FlorianMultilingualNeural",
-    "de-DE-SeraphinaMultilingualNeural"
-  ],
-
-  "en": [
-    "No",
-    "en-AU-NatashaNeural",
-    "en-AU-WilliamNeural",
-    "en-AU-AnnetteNeural",
-    "en-AU-CarlyNeural",
-    "en-AU-DarrenNeural",
-    "en-AU-DuncanNeural",
-    "en-AU-ElsieNeural",
-    "en-AU-FreyaNeural",
-    "en-AU-JoanneNeural",
-    "en-AU-KenNeural",
-    "en-AU-KimNeural",
-    "en-AU-NeilNeural",
-    "en-AU-TimNeural",
-    "en-AU-TinaNeural",
-    "en-CA-ClaraNeural",
-    "en-CA-LiamNeural",
-    "en-GB-SoniaNeural",
-    "en-GB-RyanNeural",
-    "en-GB-LibbyNeural",
-    "en-GB-AbbiNeural",
-    "en-GB-AlfieNeural",
-    "en-GB-BellaNeural",
-    "en-GB-ElliotNeural",
-    "en-GB-EthanNeural",
-    "en-GB-HollieNeural",
-    "en-GB-MaisieNeural",
-    "en-GB-NoahNeural",
-    "en-GB-OliverNeural",
-    "en-GB-OliviaNeural",
-    "en-GB-ThomasNeural",
-    "en-HK-YanNeural",
-    "en-HK-SamNeural",
-    "en-IE-EmilyNeural",
-    "en-IE-ConnorNeural",
-    "en-IN-NeerjaNeural",
-    "en-IN-PrabhatNeural",
-    "en-KE-AsiliaNeural",
-    "en-KE-ChilembaNeural",
-    "en-NG-EzinneNeural",
-    "en-NG-AbeoNeural",
-    "en-NZ-MollyNeural",
-    "en-NZ-MitchellNeural",
-    "en-PH-RosaNeural",
-    "en-PH-JamesNeural",
-    "en-SG-LunaNeural",
-    "en-SG-WayneNeural",
-    "en-TZ-ImaniNeural",
-    "en-TZ-ElimuNeural",
-    "en-US-AvaNeural",
-    "en-US-AndrewNeural",
-    "en-US-EmmaNeural",
-    "en-US-BrianNeural",
-    "en-US-JennyNeural",
-    "en-US-GuyNeural",
-    "en-US-AriaNeural",
-    "en-US-DavisNeural",
-    "en-US-JaneNeural",
-    "en-US-JasonNeural",
-    "en-US-SaraNeural",
-    "en-US-TonyNeural",
-    "en-US-NancyNeural",
-    "en-US-AmberNeural",
-    "en-US-AnaNeural",
-    "en-US-AshleyNeural",
-    "en-US-BrandonNeural",
-    "en-US-ChristopherNeural",
-    "en-US-CoraNeural",
-    "en-US-ElizabethNeural",
-    "en-US-EricNeural",
-    "en-US-JacobNeural",
-    "en-US-JennyMultilingualNeural",
-    "en-US-MichelleNeural",
-    "en-US-MonicaNeural",
-    "en-US-RogerNeural",
-    "en-US-RyanMultilingualNeural",
-    "en-US-SteffanNeural",
-    "en-US-AIGenerate1Neural",
-    "en-US-AIGenerate2Neural",
-    "en-US-AndrewMultilingualNeural",
-    "en-US-AvaMultilingualNeural",
-    "en-US-BlueNeural",
-    "en-US-BrianMultilingualNeural",
-    "en-US-EmmaMultilingualNeural",
-    "en-US-AlloyMultilingualNeural",
-    "en-US-EchoMultilingualNeural",
-    "en-US-FableMultilingualNeural",
-    "en-US-OnyxMultilingualNeural",
-    "en-US-NovaMultilingualNeural",
-    "en-US-ShimmerMultilingualNeural",
-    "en-US-AlloyMultilingualNeuralHD",
-    "en-US-EchoMultilingualNeuralHD",
-    "en-US-FableMultilingualNeuralHD",
-    "en-US-OnyxMultilingualNeuralHD",
-    "en-US-NovaMultilingualNeuralHD",
-    "en-US-ShimmerMultilingualNeuralHD",
-    "en-ZA-LeahNeural",
-    "en-ZA-LukeNeural"
-  ],
-  "es": [
-    "No",
-    "es-AR-ElenaNeural",
-    "es-AR-TomasNeural",
-    "es-BO-SofiaNeural",
-    "es-BO-MarceloNeural",
-    "es-CL-CatalinaNeural",
-    "es-CL-LorenzoNeural",
-    "es-CO-SalomeNeural",
-    "es-CO-GonzaloNeural",
-    "es-CR-MariaNeural",
-    "es-CR-JuanNeural",
-    "es-CU-BelkysNeural",
-    "es-CU-ManuelNeural",
-    "es-DO-RamonaNeural",
-    "es-DO-EmilioNeural",
-    "es-EC-AndreaNeural",
-    "es-EC-LuisNeural",
-    "es-ES-ElviraNeural",
-    "es-ES-AlvaroNeural",
-    "es-ES-AbrilNeural",
-    "es-ES-ArnauNeural",
-    "es-ES-DarioNeural",
-    "es-ES-EliasNeural",
-    "es-ES-EstrellaNeural",
-    "es-ES-IreneNeural",
-    "es-ES-LaiaNeural",
-    "es-ES-LiaNeural",
-    "es-ES-NilNeural",
-    "es-ES-SaulNeural",
-    "es-ES-TeoNeural",
-    "es-ES-TrianaNeural",
-    "es-ES-VeraNeural",
-    "es-ES-XimenaNeural",
-    "es-GQ-TeresaNeural",
-    "es-GQ-JavierNeural",
-    "es-GT-MartaNeural",
-    "es-GT-AndresNeural",
-    "es-HN-KarlaNeural",
-    "es-HN-CarlosNeural",
-    "es-MX-DaliaNeural",
-    "es-MX-JorgeNeural",
-    "es-MX-BeatrizNeural",
-    "es-MX-CandelaNeural",
-    "es-MX-CarlotaNeural",
-    "es-MX-CecilioNeural",
-    "es-MX-GerardoNeural",
-    "es-MX-LarissaNeural",
-    "es-MX-LibertoNeural",
-    "es-MX-LucianoNeural",
-    "es-MX-MarinaNeural",
-    "es-MX-NuriaNeural",
-    "es-MX-PelayoNeural",
-    "es-MX-RenataNeural",
-    "es-MX-YagoNeural",
-    "es-NI-YolandaNeural",
-    "es-NI-FedericoNeural",
-    "es-PA-MargaritaNeural",
-    "es-PA-RobertoNeural",
-    "es-PE-CamilaNeural",
-    "es-PE-AlexNeural",
-    "es-PR-KarinaNeural",
-    "es-PR-VictorNeural",
-    "es-PY-TaniaNeural",
-    "es-PY-MarioNeural",
-    "es-SV-LorenaNeural",
-    "es-SV-RodrigoNeural",
-    "es-US-PalomaNeural",
-    "es-US-AlonsoNeural",
-    "es-UY-ValentinaNeural",
-    "es-UY-MateoNeural",
-    "es-VE-PaolaNeural",
-    "es-VE-SebastianNeural"
-  ],
-
-
-  "fr": [
-    "No",
-    "fr-BE-CharlineNeural",
-    "fr-BE-GerardNeural",
-    "fr-CA-SylvieNeural",
-    "fr-CA-JeanNeural",
-    "fr-CA-AntoineNeural",
-    "fr-CA-ThierryNeural",
-    "fr-CH-ArianeNeural",
-    "fr-CH-FabriceNeural",
-    "fr-FR-DeniseNeural",
-    "fr-FR-HenriNeural",
-    "fr-FR-AlainNeural",
-    "fr-FR-BrigitteNeural",
-    "fr-FR-CelesteNeural",
-    "fr-FR-ClaudeNeural",
-    "fr-FR-CoralieNeural",
-    "fr-FR-EloiseNeural",
-    "fr-FR-JacquelineNeural",
-    "fr-FR-JeromeNeural",
-    "fr-FR-JosephineNeural",
-    "fr-FR-MauriceNeural",
-    "fr-FR-YvesNeural",
-    "fr-FR-YvetteNeural",
-    "fr-FR-RemyMultilingualNeural",
-    "fr-FR-VivienneMultilingualNeural"
-  ],
-
-
-  "hi": [
-    "No",
-    "hi-IN-SwaraNeural",
-    "hi-IN-MadhurNeural"
-  ],
-  "hu": [
-    "No",
-    "hu-HU-NoemiNeural",
-    "hu-HU-TamasNeural"
-  ],
-
-  "id": [
-    "No",
-    "id-ID-GadisNeural",
-    "id-ID-ArdiNeural"
-  ],
-
-  "it": [
-    "No",
-    "it-IT-ElsaNeural",
-    "it-IT-IsabellaNeural",
-    "it-IT-DiegoNeural",
-    "it-IT-BenignoNeural",
-    "it-IT-CalimeroNeural",
-    "it-IT-CataldoNeural",
-    "it-IT-FabiolaNeural",
-    "it-IT-FiammaNeural",
-    "it-IT-GianniNeural",
-    "it-IT-ImeldaNeural",
-    "it-IT-IrmaNeural",
-    "it-IT-LisandroNeural",
-    "it-IT-PalmiraNeural",
-    "it-IT-PierinaNeural",
-    "it-IT-RinaldoNeural",
-    "it-IT-GiuseppeNeural"
-  ],
-  "ja": [
-    "No",
-    "ja-JP-NanamiNeural",
-    "ja-JP-KeitaNeural",
-    "ja-JP-AoiNeural",
-    "ja-JP-DaichiNeural",
-    "ja-JP-MayuNeural",
-    "ja-JP-NaokiNeural",
-    "ja-JP-ShioriNeural",
-    "ja-JP-MasaruMultilingualNeural"
-  ],
-
-  "kk": [
-    "No",
-    "kk-KZ-AigulNeural",
-    "kk-KZ-DauletNeural"
-  ],
-  "ko": [
-    "No",
-    "ko-KR-SunHiNeural",
-    "ko-KR-InJoonNeural",
-    "ko-KR-BongJinNeural",
-    "ko-KR-GookMinNeural",
-    "ko-KR-JiMinNeural",
-    "ko-KR-SeoHyeonNeural",
-    "ko-KR-SoonBokNeural",
-    "ko-KR-YuJinNeural",
-    "ko-KR-HyunsuNeural"
-  ],
-
-  "ms": [
-    "No",
-    "ms-MY-YasminNeural",
-    "ms-MY-OsmanNeural"
-  ],
-  "nl": [
-    "No",
-    "nl-BE-DenaNeural",
-    "nl-BE-ArnaudNeural",
-    "nl-NL-FennaNeural",
-    "nl-NL-MaartenNeural",
-    "nl-NL-ColetteNeural"
-  ],
-  "pl": [
-    "No",
-    "pl-PL-AgnieszkaNeural",
-    "pl-PL-MarekNeural",
-    "pl-PL-ZofiaNeural"
-  ],
-
-  "pt": [
-    "No",
-    "pt-BR-FranciscaNeural",
-    "pt-BR-AntonioNeural",
-    "pt-BR-BrendaNeural",
-    "pt-BR-DonatoNeural",
-    "pt-BR-ElzaNeural",
-    "pt-BR-FabioNeural",
-    "pt-BR-GiovannaNeural",
-    "pt-BR-HumbertoNeural",
-    "pt-BR-JulioNeural",
-    "pt-BR-LeilaNeural",
-    "pt-BR-LeticiaNeural",
-    "pt-BR-ManuelaNeural",
-    "pt-BR-NicolauNeural",
-    "pt-BR-ValerioNeural",
-    "pt-BR-YaraNeural",
-    "pt-BR-ThalitaNeural",
-    "pt-PT-RaquelNeural",
-    "pt-PT-DuarteNeural",
-    "pt-PT-FernandaNeural"
-  ],
-
-  "ru": [
-    "No",
-    "ru-RU-SvetlanaNeural",
-    "ru-RU-DmitryNeural",
-    "ru-RU-DariyaNeural"
-  ],
-
-  "sv": [
-    "No",
-    "sv-SE-SofieNeural",
-    "sv-SE-MattiasNeural",
-    "sv-SE-HilleviNeural"
-  ],
-  "th": [
-    "No",
-    "th-TH-PremwadeeNeural",
-    "th-TH-NiwatNeural",
-    "th-TH-AcharaNeural"
-  ],
-  "tr": [
-    "No",
-    "tr-TR-EmelNeural",
-    "tr-TR-AhmetNeural"
-  ],
-  "uk": [
-    "No",
-    "uk-UA-PolinaNeural",
-    "uk-UA-OstapNeural"
-  ],
-  "vi": [
-    "No",
-    "vi-VN-HoaiMyNeural",
-    "vi-VN-NamMinhNeural"
-  ],
-  "zh": [
-    "No",
-    "zh-CN-XiaoxiaoNeural",
-    "zh-CN-YunxiNeural",
-    "zh-CN-YunjianNeural",
-    "zh-CN-XiaoyiNeural",
-    "zh-CN-YunyangNeural",
-    "zh-CN-XiaochenNeural",
-    "zh-CN-XiaohanNeural",
-    "zh-CN-XiaomengNeural",
-    "zh-CN-XiaomoNeural",
-    "zh-CN-XiaoqiuNeural",
-    "zh-CN-XiaoruiNeural",
-    "zh-CN-XiaoshuangNeural",
-    "zh-CN-XiaoyanNeural",
-    "zh-CN-XiaoyouNeural",
-    "zh-CN-XiaozhenNeural",
-    "zh-CN-YunfengNeural",
-    "zh-CN-YunhaoNeural",
-    "zh-CN-YunxiaNeural",
-    "zh-CN-YunyeNeural",
-    "zh-CN-YunzeNeural",
-    "zh-CN-XiaochenMultilingualNeural",
-    "zh-CN-XiaorouNeural",
-    "zh-CN-XiaoxiaoDialectsNeural",
-    "zh-CN-XiaoxiaoMultilingualNeural",
-    "zh-CN-XiaoyuMultilingualNeural",
-    "zh-CN-YunjieNeural",
-    "zh-CN-YunyiMultilingualNeural",
-    "zh-CN-guangxi-YunqiNeural",
-    "zh-CN-henan-YundengNeural",
-    "zh-CN-liaoning-XiaobeiNeural",
-    "zh-CN-liaoning-YunbiaoNeural",
-    "zh-CN-shaanxi-XiaoniNeural",
-    "zh-CN-shandong-YunxiangNeural",
-    "zh-CN-sichuan-YunxiNeural",
-    "zh-HK-HiuMaanNeural",
-    "zh-HK-WanLungNeural",
-    "zh-HK-HiuGaaiNeural",
-    "zh-TW-HsiaoChenNeural",
-    "zh-TW-YunJheNeural",
-    "zh-TW-HsiaoYuNeural"
-  ]
-}
-```
+更多示例和详细说明，请参考项目的 GitHub 仓库和官方文档。
