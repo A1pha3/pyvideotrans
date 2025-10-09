@@ -1,4 +1,4 @@
-# ElevenLabs TTS 指南（骨架）
+# ElevenLabs TTS 配置指南
 
 概述
 - 适用场景：使用 ElevenLabs 提供的高质量语音（tts_type=9）

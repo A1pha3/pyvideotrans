@@ -31,7 +31,7 @@ PyVideoTrans 是一个开源的视频翻译和配音工具，致力于为用户�
 
 #### 系统要求
 
-- Python 3.9-3.11
+- Python 3.10.x
 - FFmpeg
 - Git
 
@@ -69,6 +69,8 @@ python sp.py
 - [OpenAI 配置](providers/openai.md) - ChatGPT 翻译和 TTS 配置
 - [Azure TTS 配置](providers/azure-tts.md) - Azure 语音服务配置
 - [DeepL 配置](providers/deepl.md) - DeepL 翻译服务配置
+- [Google Cloud TTS](providers/google-cloud-tts.md) - Google 云端语音合成配置（英文）
+- [Gemini 配置](providers/gemini.md) - Gemini 翻译渠道配置
 
 ### 💻 开发者资源
 - [API 文档](api/api.md) - 完整的 API 参考

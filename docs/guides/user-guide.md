@@ -341,7 +341,7 @@ PyVideoTrans 采用直观的图形界面设计，主要包含以下几个区域�
 
 ## 获取帮助
 
-- [常见问题解答](../faq.md)
+- [常见问题解答](faq.md)
 - [GitHub Issues](https://github.com/jianchang512/pyvideotrans/issues)
 - [Discord 社区](https://discord.gg/y9gUweVCCJ)
 - [官方文档](https://pyvideotrans.com)
@@ -351,4 +351,4 @@ PyVideoTrans 采用直观的图形界面设计，主要包含以下几个区域�
 - [API 文档](../api/api.md)
 - [模型下载](model-download.md)
 - [服务商配置](../providers/)
-- [开发指南](development.md)
+- [贡献指南](../contributing.md)

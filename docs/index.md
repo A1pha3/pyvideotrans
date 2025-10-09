@@ -21,6 +21,8 @@
 - [OpenAI 配置](providers/openai.md) - ChatGPT 翻译和 OpenAI TTS 配置
 - [Azure TTS 配置](providers/azure-tts.md) - Azure 语音服务配置
 - [DeepL 配置](providers/deepl.md) - DeepL 翻译服务配置
+- [Google Cloud TTS](providers/google-cloud-tts.md) - Google 云端语音合成配置（英文）
+- [Gemini 配置](providers/gemini.md) - Gemini 翻译渠道配置
 
 ### 💻 开发者资源
 - [API 文档](api/api.md) - 完整的 API 参考
@@ -59,7 +61,7 @@
 ## 📋 文档版本
 
 - **当前版本**: v3.80
-- **最后更新**: 2024年10月
+- **最后更新**: 2025年10月
 - **文档语言**: 中文 (简体)
 
 ## 🔍 搜索和导航

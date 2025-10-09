@@ -1,4 +1,4 @@
-# Azure TTS 指南（骨架）
+# Azure TTS 配置指南
 
 概述
 - 适用场景：使用 Azure Speech 服务进行文本转语音，供配音流程（tts_type=5）；

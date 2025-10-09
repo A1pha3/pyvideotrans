@@ -1,4 +1,4 @@
-# Gemini 指南（骨架）
+# Gemini 配置指南
 
 概述
 - 适用场景：作为翻译渠道（translate_type 可映射至 Gemini，详见 docs/api/api.md）

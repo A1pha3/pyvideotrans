@@ -1,4 +1,4 @@
-# Edge TTS 指南（骨架）
+# Edge TTS 配置指南
 
 概述
 - 适用场景：使用 Microsoft Edge TTS（开源 edge-tts 客户端）进行本地/在线合成（tts_type=0）
