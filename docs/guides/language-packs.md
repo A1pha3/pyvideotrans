@@ -85,7 +85,7 @@
 
 和其他一样，该内容字段名不要动，字段值改为要显示的名称
 
-**制作完成后，确认符合正确的 JSON 格式，然后将文件放到 videotrans/language 目录下，重启软件即自动应用该语言。若你制作的语言包与默认语言不同，可在 `videotrans/set.ini` 中设置 `lang=语言代码` 强制使用，例如 `lang=zh` 将强制应用 zh.json。**
+**制作完成后，确认符合正确的 JSON 格式，然后将文件放到 `videotrans/language` 目录下，重启软件即自动应用该语言。若你制作的语言包与默认语言不同，可在 `videotrans/set.ini` 中设置 `lang=语言代码` 强制使用，例如 `lang=zh` 将强制应用 zh.json。**
 
 
 

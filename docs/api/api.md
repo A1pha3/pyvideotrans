@@ -6,7 +6,7 @@ PyVideoTrans 提供了丰富的 API 接口，支持程序化调用各种功能�
 
 ### 基本信息
 
-- **版本**: v3.80
+- **版本**: 最新版本
 - **基础路径**: `/api/v1`
 - **内容类型**: `application/json`
 - **字符编码**: UTF-8
@@ -238,7 +238,7 @@ GET /api/v1/system/status
 ```json
 {
   "success": true,
-  "version": "v3.80",
+  "version": "最新版本",
   "system": {
     "os": "Windows 10",
     "python_version": "3.10.4",

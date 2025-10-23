@@ -25,6 +25,7 @@
 > - 必须解压后使用，不能直接在压缩包内运行
 > - 如遇权限问题，右键以管理员身份运行
 > - 杀毒软件可能误报，请添加到白名单
+> - 确保系统已安装必要的运行库
 
 ### 源码安装
 
@@ -61,13 +62,13 @@ PyVideoTrans 需要下载语音识别模型才能正常工作：
 pip uninstall -y torch torchaudio
 
 # 安装 GPU 版本的 PyTorch
-pip install torch==2.2.0 torchaudio==2.2.0 --index-url https://download.pytorch.org/whl/cu118
+pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu118
 
 # 安装 CUDA 库 (Linux/Windows)
 pip install nvidia-cublas-cu11 nvidia-cudnn-cu11
 ```
 
-详细的 GPU 配置指南请参考：[CUDA 加速支持](https://pyvideotrans.com/gpu.html)
+> **注意**: 请根据您的 CUDA 版本选择合适的 PyTorch 版本。最新版本通常支持最新的 CUDA 版本。
 
 ## 常见问题
 

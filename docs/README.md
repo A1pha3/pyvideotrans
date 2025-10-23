@@ -179,9 +179,8 @@ pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-hos
 - 建设更好的社区
 
 **支持方式**:
+- [GitHub Sponsors](https://github.com/sponsors/jianchang512)
 - [Ko-fi 捐赠](https://ko-fi.com/jianchang512)
-- 微信赞赏
-- 支付宝捐赠
 
 ### 🌟 其他支持方式
 
@@ -192,12 +191,11 @@ pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-hos
 
 ## 📄 许可证
 
-本项目采用 [GPL-3.0 许可证](https://github.com/jianchang512/pyvideotrans/blob/main/LICENSE) 开源发布。
+本项目采用 [GPL-3.0 许可证](LICENSE) 开源发布。
 
 ## 🔗 相关链接
 
 - **GitHub**: https://github.com/jianchang512/pyvideotrans
-- **官方网站**: https://pyvideotrans.com
 - **Discord 社区**: https://discord.gg/y9gUweVCCJ
 - **文档中心**: [查看所有文档](index.md)
 

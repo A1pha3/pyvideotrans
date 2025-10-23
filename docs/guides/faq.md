@@ -33,6 +33,8 @@ python -V
    pip install 包名
    ```
 
+4. **检查 Python 版本兼容性**: 确保使用 Python 3.10.x
+
 ### Q3: Windows 上 ctranslate2 版本兼容问题？
 
 **A**: 如果 CUDA 版本低于 12.x，需要降级 ctranslate2：

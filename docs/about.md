@@ -91,9 +91,8 @@ PyVideoTrans 由热爱开源的开发者团队维护，我们致力于：
 - 建设更好的社区
 
 **支持方式**:
+- [GitHub Sponsors](https://github.com/sponsors/jianchang512)
 - [Ko-fi 捐赠](https://ko-fi.com/jianchang512)
-- 微信赞赏
-- 支付宝捐赠
 
 ### 🌟 其他支持方式
 
