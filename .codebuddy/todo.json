@@ -1,0 +1,29 @@
+{
+  "items": [
+    {
+      "id": "task-1",
+      "content": "更新核心文档中过时内容",
+      "status": "done"
+    },
+    {
+      "id": "task-2",
+      "content": "规划新增文档结构大纲",
+      "status": "done"
+    },
+    {
+      "id": "task-3",
+      "content": "撰写架构与设计文档",
+      "status": "todo"
+    },
+    {
+      "id": "task-4",
+      "content": "撰写开发者指南与源码导读",
+      "status": "todo"
+    },
+    {
+      "id": "task-5",
+      "content": "整理教程示例文档与案例",
+      "status": "todo"
+    }
+  ]
+}

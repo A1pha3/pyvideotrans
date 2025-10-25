@@ -17,22 +17,31 @@ PyVideoTrans 是一个开源的视频翻译和配音工具，致力于为用户�
 
 ## 技术架构
 
-PyVideoTrans 基于现代化的技术栈构建：
+PyVideoTrans 主要由以下部分组成：
 
-- **前端界面**: PySide6 提供友好的图形界面
-- **语音识别**: Faster Whisper / OpenAI Whisper
-- **文本翻译**: 多服务商API集成
-- **语音合成**: Edge TTS / Azure TTS / OpenAI TTS 等
-- **音频处理**: FFmpeg + UVR5 音频分离
-- **GPU加速**: CUDA / MPS 硬件加速支持
+- **桌面端 GUI**：基于 PySide6，采用多线程队列分发任务
+- **任务调度器**：`videotrans/task` 目录负责队列管理、日志与结果落盘
+- **音频与字幕管线**：FFmpeg、UVR5 完成音轨拆分、混合与字幕生成
+- **模型与服务集成**：统一的 `recognition`、`translator`、`tts` 模块封装本地模型与外部 API
+- **本地 API 服务**：`api.py` 暴露 HTTP 接口，复用 GUI 同步的任务管线
+- **配置系统**：`videotrans/configure` 维护全局状态、缓存与渠道凭据
 
 ## 支持的语言
 
-PyVideoTrans 支持超过 30 种语言的识别、翻译和合成：
+PyVideoTrans 支持超过 30 种语言的识别、翻译和语音合成：
 
-**主要语言**: 中文（简体/繁体）、英语、日语、韩语、法语、德语、西班牙语、俄语、阿拉伯语等
+### 语音识别
+- **本地 Faster-Whisper**：多语种，含中/英/日/韩/法/德/西班牙等
+- **FunASR**：`paraformer-zh` 支持中文、粤语；`SenseVoiceSmall` 覆盖中/英/日/韩/粤
+- **云端渠道**：Google Speech、Gemini、302.AI、ElevenLabs、Qwen3-ASR 等
 
-**完整列表**: 简体中文、繁体中文、英语、韩语、日语、俄语、法语、德语、意大利语、西班牙语、葡萄牙语、越南语、泰语、阿拉伯语、土耳其语、匈牙利语、印地语、乌克兰语、哈萨克语、印尼语、马来语、捷克语、波兰语、荷兰语、瑞典语
+### 文本翻译
+- 覆盖 Google、DeepL、ChatGPT、Gemini、DeepSeek、OpenRouter 等多通道
+- `LANG_CODE` 映射详见 `videotrans/translator/__init__.py`，已对齐 GUI 展示
+
+### 语音合成
+- Edge-TTS、Azure、OpenAI、Gemini、ElevenLabs、FishTTS、本地 GPT-SoVITS 等
+- 某些渠道仅支持特定语种，调用前请参考 `videotrans/tts/__init__.py`
 
 ## 应用场景
 
@@ -42,28 +51,28 @@ PyVideoTrans 支持超过 30 种语言的识别、翻译和合成：
 - 学术讲座配音
 
 ### 商业营销
-- 产品宣传片翻译
-- 企业培训视频
-- 国际市场推广
+- 产品宣传片多语言配音与字幕
+- 企业内部培训的快速本地化
+- 营销直播/短视频的跨语种分发
 
 ### 内容创作
-- YouTube 视频本地化
-- 播客多语言版本
-- 纪录片翻译
+- YouTube/哔哩哔哩 等平台的视频本地化
+- 播客、采访、纪录片的多语言扩展
+- 教程、课程与知识付费内容的国际化
 
 ### 个人使用
 - 家庭视频翻译
 - 旅行记录配音
 - 学习资料制作
 
-## 开发团队
+## 开发与维护
 
-PyVideoTrans 由热爱开源的开发者团队维护，我们致力于：
+PyVideoTrans 由核心维护者与社区贡献者共同推进：
 
-- 持续改进产品功能和性能
-- 及时响应用户反馈和需求
-- 保持代码的开放性和透明度
-- 建设活跃的开源社区
+- **核心目标**：保持稳定、高质量的视频翻译体验
+- **发布节奏**：主分支持续集成 + GitHub Releases 定期归档
+- **协作方式**：GitHub Issue / PR、Discord、邮件反馈
+- **保障措施**：任务日志、异常追踪与社区回访机制
 
 ## 社区支持
 
@@ -80,26 +89,22 @@ PyVideoTrans 由热爱开源的开发者团队维护，我们致力于：
 
 ## 支持项目
 
-如果 PyVideoTrans 对您有帮助，欢迎通过以下方式支持项目发展：
+如果 PyVideoTrans 对你有帮助，可以考虑以下方式支持：
 
 ### 💰 资金支持
-
-您的支持将帮助我们：
-- 持续改进软件功能
-- 维护服务器和基础设施
-- 开发新特性和优化
-- 建设更好的社区
-
-**支持方式**:
 - [GitHub Sponsors](https://github.com/sponsors/jianchang512)
 - [Ko-fi 捐赠](https://ko-fi.com/jianchang512)
 
-### 🌟 其他支持方式
+每一份赞助都会用于：
+- 服务器与构建环境维护
+- 新特性研发与性能优化
+- 文档与社区运营
 
-- **GitHub Star**: 给项目点星支持
-- **分享推荐**: 向朋友推荐 PyVideoTrans
-- **反馈建议**: 提供使用体验和改进建议
-- **参与开发**: 贡献代码和文档
+### 🌟 其他支持
+- 给仓库点一颗 Star，提升曝光度
+- 向身边的创作者/团队推荐 PyVideoTrans
+- 在 Issue 或 Discord 提供建议、提交 PR
+- 协助改进文档或翻译
 
 ## 许可证
 

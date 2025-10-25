@@ -1,632 +1,371 @@
-# PyVideoTrans API 文档
+# PyVideoTrans 本地 API 指南
 
-PyVideoTrans 提供了丰富的 API 接口，支持程序化调用各种功能。本文档详细介绍了所有可用的 API。
+PyVideoTrans 内置了一个基于 Flask 的本地 API 服务，允许你通过 HTTP 调用完成字幕翻译、语音识别、配音以及一键视频翻译等任务。本文档基于 `api.py` 的最新实现（默认端口 9011）进行说明。
 
-## API 概述
+## 快速开始
 
-### 基本信息
+```bash
+cd /Volumes/mini_matrix/github/factory/pyvideotrans
+python api.py
+```
 
-- **版本**: 最新版本
-- **基础路径**: `/api/v1`
-- **内容类型**: `application/json`
-- **字符编码**: UTF-8
+默认情况下服务监听 `http://127.0.0.1:9011`。
 
-### 认证方式
+- 如需修改监听地址或端口，可在项目根目录创建 `host.txt`，写入形如 `0.0.0.0:8080` 的值。
+- 生成文件统一保存在 `<项目根目录>/apidata/<task_id>/`。
+- 所有接口均返回 JSON，当前版本未启用鉴权。
 
-目前 API 主要用于本地调用，暂不需要认证。未来版本可能会添加 API Key 认证。
+## 通用约定
 
-## 核心 API
+### 路径与资源
 
-### 1. 视频翻译 API
+| 项 | 默认值 | 说明 |
+| --- | --- | --- |
+| 基础 URL | `http://<host>:<port>` | 无额外前缀（旧版文档中的 `/api/v1` 已废弃） |
+| 静态资源 | `/apidata/<task_id>/<filename>` | 可直接通过浏览器下载生成文件 |
+| 进度日志 | `/apidata/processinfo/<task_id>.json` | 供内部追踪使用 |
 
-#### 开始翻译任务
+### 返回格式
 
-```http
-POST /api/v1/translate
-Content-Type: application/json
-
+```json
 {
-  "input_file": "path/to/input.mp4",
-  "output_dir": "path/to/output",
-  "source_language": "zh",
-  "target_language": "en",
+  "code": 0,
+  "msg": "ok",
+  "task_id": "06c238d250f0b51248563c405f1d7294"
+}
+```
+
+通用字段说明：
+
+| 字段 | 含义 |
+| --- | --- |
+| `code` | `0` 表示成功创建任务；`-1` 表示任务仍在队列或执行中；正整数表示错误（详见各接口说明） |
+| `msg` | 提示信息、排队进度或错误原因 |
+| `task_id` | 任务唯一标识。查询状态与下载结果时使用 |
+| `data` | 仅在任务完成时返回，包含生成文件的绝对路径与可访问 URL |
+
+### 任务查询结果
+
+`/task_status` 在任务成功时返回：
+
+```json
+{
+  "code": 0,
+  "msg": "ok",
+  "data": {
+    "absolute_path": ["/abs/path/apidata/<task_id>/en.srt"],
+    "url": ["http://127.0.0.1:9011/apidata/<task_id>/en.srt"]
+  }
+}
+```
+
+执行中：`{"code": -1, "msg": "正在合成声音"}`  \
+不存在：`{"code": 1, "msg": "该任务 <task_id> 不存在"}`  \
+失败：`{"code": 3, "msg": "错误信息"}`
+
+### 输出目录结构
+
+```
+apidata/
+├── <task_id>/            # 任务产出目录
+│   ├── *.srt / *.m4a ...  # 生成文件
+│   └── 文件说明.txt       # 任务摘要
+└── processinfo/
+    └── <task_id>.json    # 阶段日志
+```
+
+## 接口概览
+
+| 接口 | 方法 | 说明 |
+| --- | --- | --- |
+| `/tts` | POST | 基于字幕生成配音音频 |
+| `/translate_srt` | POST | 字幕翻译 |
+| `/recogn` | POST | 语音识别（音/视频转文字、字幕） |
+| `/trans_video` | POST | 完整视频翻译管线（识别 → 翻译 → 配音 → 合成） |
+| `/task_status` | GET / POST | 查询单个任务状态与结果 |
+| `/task_status_list` | POST | 批量查询任务状态 |
+
+## `/tts`：字幕配音
+
+- **功能**：将 `.srt` 字幕文件或原始字幕文本转换成指定 TTS 渠道的音频。
+- **返回**：成功时 `code=0`，稍后通过 `/task_status` 获取结果音频与字幕。
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `name` | string | ✅ | 字幕路径（需与服务同机）或完整的 SRT 字符串 |
+| `tts_type` | integer | ✅ | 语音渠道编号，见 [TTS 渠道对照表](#tts-渠道对照表) |
+| `voice_role` | string | ✅ | 语音角色名称（各渠道枚举不同） |
+| `target_language_code` | string | ✅ | 字幕语言代码（示例：`en`、`zh-cn`） |
+| `voice_rate` | string | ❌ | 语速，`+0%`～`±50%` |
+| `volume` | string | ❌ | 音量，`+0%`～`±50%`（Edge-TTS 专属） |
+| `pitch` | string | ❌ | 音调，`+0Hz`～`±20Hz`（Edge-TTS 专属） |
+| `out_ext` | string | ❌ | 输出音频格式，默认 `mp3`（支持 mp3/wav/flac/aac） |
+| `voice_autorate` | boolean | ❌ | 自动调节语速以贴合字幕时轴 |
+
+示例：
+
+```json
+POST /tts
+{
+  "name": "C:/videos/sample.srt",
+  "tts_type": 0,
+  "voice_role": "en-US-AriaNeural",
+  "target_language_code": "en",
+  "voice_rate": "+0%",
+  "out_ext": "wav"
+}
+```
+
+> 若传入的 `name` 字段包含换行，将视为 SRT 文本并写入临时文件。
+
+## `/translate_srt`：字幕翻译
+
+- **功能**：翻译字幕文件或字幕文本。
+- **返回**：成功后 `code=0`，结果字幕文件通过 `/task_status` 下载。
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `name` | string | ✅ | SRT 文件路径或 SRT 字符串 |
+| `translate_type` | integer | ✅ | 翻译渠道编号，见 [翻译渠道对照表](#翻译渠道对照表) |
+| `target_language` | string | ✅ | 目标语言代码（如 `en`、`ja`） |
+| `source_code` | string | ❌ | 源语言代码，可为空表示自动判定 |
+
+示例：
+
+```json
+POST /translate_srt
+{
+  "name": "C:/videos/lecture.srt",
+  "translate_type": 4,
+  "target_language": "en"
+}
+```
+
+## `/recogn`：语音识别
+
+- **功能**：对音频/视频文件进行语音识别，生成字幕或文本。
+- **返回**：成功后 `code=0`，识别结果在任务完成后提供。
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `name` | string | ✅ | 本地音频/视频绝对路径 |
+| `recogn_type` | integer | ✅ | 识别模式编号，见 [语音识别模式表](#语音识别模式表) |
+| `model_name` | string | ✅* | Whisper/Faster Whisper 等本地模型名称；云端模式可忽略 |
+| `detect_language` | string | ✅ | 源语种代码（`auto` 仅在部分模式可用） |
+| `split_type` | string | ❌ | `all`（整段）/`avg`（等长切片），默认 `all` |
+| `is_cuda` | boolean | ❌ | 是否启用 CUDA/MPS 加速 |
+
+示例：
+
+```json
+POST /recogn
+{
+  "name": "C:/videos/talk.mp4",
+  "recogn_type": 0,
+  "model_name": "large-v3",
+  "detect_language": "ja",
+  "is_cuda": true
+}
+```
+
+## `/trans_video`：完整视频翻译
+
+- **功能**：一站式完成识别 → 翻译 → 配音 → 合成，可选字幕嵌入、背景音乐保留等。
+- **返回**：成功后 `code=0`，多种产物（混音视频、配音、字幕等）会生成在任务目录。
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `name` | string | ✅ | 待处理视频路径 |
+| `recogn_type` | integer | ✅ | 语音识别模式编号 |
+| `model_name` | string | ✅* | 本地模型名称（云端识别可忽略） |
+| `split_type` | string | ❌ | 识别切分方式，默认 `all` |
+| `is_cuda` | boolean | ❌ | 是否启用 GPU |
+| `translate_type` | integer | ✅ | 翻译渠道编号 |
+| `target_language` | string | ✅ | 目标语言代码 |
+| `source_language` | string | ❌ | 源语言代码（默认与识别一致） |
+| `tts_type` | integer | ✅ | 配音渠道编号 |
+| `voice_role` | string | ✅ | 配音角色名称（`"no"` 表示不生成配音） |
+| `voice_rate` | string | ❌ | 配音语速，默认 `+0%` |
+| `voice_autorate` | boolean | ❌ | 自动语速对齐，默认 `false` |
+| `video_autorate` | boolean | ❌ | 根据配音自动调节视频结尾时长 |
+| `volume` | string | ❌ | 配音音量，默认 `+0%` |
+| `pitch` | string | ❌ | 配音音调，默认 `+0Hz` |
+| `subtitle_type` | integer | ❌ | 字幕嵌入策略：0 不嵌入、1 硬字幕、2 软字幕、3 双硬、4 双软 |
+| `append_video` | boolean | ❌ | 配音比原视频长时是否自动延长结尾 |
+| `back_audio` | string | ❌ | 自定义背景音乐路径 |
+| `is_separate` | boolean | ❌ | 是否先执行人声/背景音分离 |
+| `subtitles` | string | ❌ | 外部字幕内容（若已存在字幕，可跳过识别环节） |
+| `only_video` | boolean | ❌ | 仅输出视频，不额外导出字幕/音频 |
+
+示例（常规工作流）：
+
+```json
+POST /trans_video
+{
+  "name": "C:/videos/demo.mp4",
+  "recogn_type": 0,
   "model_name": "small",
-  "translate_service": "google",
-  "voice_service": "edge-tts",
-  "voice_name": "en-US-AriaNeural",
-  "subtitle_type": "srt",
-  "keep_background_music": true,
-  "voice_rate": 0,
-  "voice_volume": 100,
-  "background_music_volume": 50
-}
-```
-
-**参数说明**:
-
-| 参数 | 类型 | 必需 | 描述 |
-|------|------|------|------|
-| `input_file` | string | 是 | 输入视频文件路径 |
-| `output_dir` | string | 是 | 输出目录路径 |
-| `source_language` | string | 是 | 源语言代码 |
-| `target_language` | string | 是 | 目标语言代码 |
-| `model_name` | string | 否 | 语音识别模型名称 (默认: small) |
-| `translate_service` | string | 否 | 翻译服务提供商 (默认: google) |
-| `voice_service` | string | 否 | 语音合成服务 (默认: edge-tts) |
-| `voice_name` | string | 否 | 语音名称 |
-| `subtitle_type` | string | 否 | 字幕格式 (srt/vtt/ass) |
-| `keep_background_music` | boolean | 否 | 是否保留背景音乐 |
-| `voice_rate` | integer | 否 | 语音速度调整 (-50 到 50) |
-| `voice_volume` | integer | 否 | 语音音量 (0-100) |
-| `background_music_volume` | integer | 否 | 背景音乐音量 (0-100) |
-
-**响应示例**:
-
-```json
-{
-  "success": true,
-  "task_id": "task_123456789",
-  "message": "翻译任务已开始",
-  "estimated_time": 300
-}
-```
-
-#### 查询任务状态
-
-```http
-GET /api/v1/task/{task_id}
-```
-
-**响应示例**:
-
-```json
-{
-  "success": true,
-  "task_id": "task_123456789",
-  "status": "processing",
-  "progress": 45,
-  "current_step": "语音识别",
-  "estimated_remaining": 180,
-  "output_files": []
-}
-```
-
-**状态值**:
-- `pending`: 等待中
-- `processing`: 处理中
-- `completed`: 已完成
-- `failed`: 失败
-- `cancelled`: 已取消
-
-### 2. 语音识别 API
-
-#### 音频转文字
-
-```http
-POST /api/v1/speech-to-text
-Content-Type: application/json
-
-{
-  "input_file": "path/to/audio.wav",
-  "model_name": "small",
-  "language": "zh",
-  "output_format": "srt"
-}
-```
-
-**参数说明**:
-
-| 参数 | 类型 | 必需 | 描述 |
-|------|------|------|------|
-| `input_file` | string | 是 | 输入音频/视频文件路径 |
-| `model_name` | string | 否 | 识别模型名称 |
-| `language` | string | 否 | 语言代码 (auto 表示自动检测) |
-| `output_format` | string | 否 | 输出格式 (srt/txt/json) |
-
-**响应示例**:
-
-```json
-{
-  "success": true,
-  "task_id": "stt_123456789",
-  "text": "识别出的文本内容",
-  "subtitle_file": "path/to/output.srt",
-  "segments": [
-    {
-      "start": 0.0,
-      "end": 2.5,
-      "text": "第一段文字"
-    }
-  ]
-}
-```
-
-### 3. 文本翻译 API
-
-#### 翻译文本
-
-```http
-POST /api/v1/translate-text
-Content-Type: application/json
-
-{
-  "text": "要翻译的文本",
-  "source_language": "zh",
+  "translate_type": 8,
+  "source_language": "zh-cn",
   "target_language": "en",
-  "service": "google"
+  "tts_type": 0,
+  "voice_role": "en-US-AriaNeural",
+  "subtitle_type": 1,
+  "voice_autorate": true,
+  "is_cuda": true
 }
 ```
 
-**参数说明**:
+> 当 `subtitles` 字段不为空时，服务将跳过语音识别阶段，直接使用提供的字幕。
 
-| 参数 | 类型 | 必需 | 描述 |
-|------|------|------|------|
-| `text` | string | 是 | 要翻译的文本 |
-| `source_language` | string | 是 | 源语言代码 |
-| `target_language` | string | 是 | 目标语言代码 |
-| `service` | string | 否 | 翻译服务提供商 |
+## 任务状态接口
 
-**响应示例**:
+### `/task_status`
 
-```json
-{
-  "success": true,
-  "original_text": "要翻译的文本",
-  "translated_text": "Text to translate",
-  "source_language": "zh",
-  "target_language": "en",
-  "service": "google"
-}
-```
+- **GET**：`/task_status?task_id=<uuid>`
+- **POST**：`{"task_id": "<uuid>"}`
 
-### 4. 语音合成 API
+成功时返回 `code=0` 和 `data` 字段；执行中/失败/不存在的返回值见前文。
 
-#### 文字转语音
+### `/task_status_list`
 
-```http
-POST /api/v1/text-to-speech
-Content-Type: application/json
+- **POST**：`{"task_id_list": ["id1", "id2"]}`
+- 返回结构：`{"code": 0, "data": {"id1": {...}, "id2": {...}}}`
 
-{
-  "text": "要合成的文本",
-  "language": "en",
-  "voice_name": "en-US-AriaNeural",
-  "service": "edge-tts",
-  "rate": 0,
-  "volume": 100,
-  "output_file": "path/to/output.wav"
-}
-```
+## TTS 渠道对照表
 
-**参数说明**:
+| 数值 | 渠道名称 | 说明 |
+| --- | --- | --- |
+| 0 | Edge-TTS(免费) | 微软 Edge 在线 TTS |
+| 1 | CosyVoice(本地) | 本地 CosyVoice 服务 |
+| 2 | ChatTTS(本地) | 本地 ChatTTS |
+| 3 | 302.AI | 302.AI 在线语音 |
+| 4 | FishTTS(本地) | 本地 FishTTS |
+| 5 | Azure-TTS | Azure Speech Service |
+| 6 | GPT-SoVITS(本地) | GPT-SoVITS 服务 |
+| 7 | clone-voice(本地) | 自建 clone-voice |
+| 8 | OpenAI TTS | OpenAI 文本转语音 |
+| 9 | Elevenlabs.io | ElevenLabs 语音合成 |
+| 10 | Google TTS | Google 在线 TTS |
+| 11 | 自定义TTSAPI | 自定义 HTTP 接口 |
+| 12 | 字节火山语音合成 | VolcEngine TTS |
+| 13 | F5/Index/Spark/Dia TTS | 第三方综合接口 |
+| 14 | kokoro-TTS(本地) | 本地 kokoro |
+| 15 | Google Cloud TTS | Google Cloud Speech |
+| 16 | Gemini TTS | Google Gemini 语音 |
+| 17 | ChatterBox | ChatterBox 语音 |
+| 18 | Qwen TTS | 通义千问 TTS |
 
-| 参数 | 类型 | 必需 | 描述 |
-|------|------|------|------|
-| `text` | string | 是 | 要合成的文本 |
-| `language` | string | 是 | 语言代码 |
-| `voice_name` | string | 否 | 语音名称 |
-| `service` | string | 否 | TTS 服务提供商 |
-| `rate` | integer | 否 | 语速调整 (-50 到 50) |
-| `volume` | integer | 否 | 音量 (0-100) |
-| `output_file` | string | 否 | 输出文件路径 |
+部分渠道对语言有严格限制，调用前建议参考 GUI 中的提示或源码 `videotrans/tts/__init__.py`。
 
-**响应示例**:
+## 翻译渠道对照表
 
-```json
-{
-  "success": true,
-  "audio_file": "path/to/output.wav",
-  "duration": 5.2,
-  "voice_info": {
-    "name": "en-US-AriaNeural",
-    "language": "en-US",
-    "gender": "Female"
-  }
-}
-```
+| 数值 | 渠道名称 | 类型 |
+| --- | --- | --- |
+| 0 | Google(免费) | 在线 |
+| 1 | 微软(免费) | 在线 |
+| 2 | MyMemory API(免费) | 在线 |
+| 3 | 百度翻译 | 在线 |
+| 4 | DeepL | 在线 |
+| 5 | DeepLx | 自建/代理 |
+| 6 | OTT(本地) | 本地 LLM |
+| 7 | 腾讯翻译 | 在线 |
+| 8 | OpenAI ChatGPT | 在线 |
+| 9 | 兼容AI/本地模型 | 本地或自建接口 |
+| 10 | 字节火山AI | 在线 |
+| 11 | AzureGPT AI | 在线 |
+| 12 | Gemini AI | 在线 |
+| 13 | 自定义翻译API | 自定义 HTTP |
+| 14 | 阿里百炼 | 在线 |
+| 15 | Claude AI | 在线 |
+| 16 | LibreTranslate(本地) | 本地 |
+| 17 | 302.AI | 在线 |
+| 18 | 阿里机器翻译 | 在线 |
+| 19 | 智谱AI | 在线 |
+| 20 | 硅基流动 | 在线 |
+| 21 | DeepSeek | 在线 |
+| 22 | OpenRouter | 在线 |
 
-### 5. 系统信息 API
+> 语言代码映射可参考 `videotrans/translator/__init__.py` 中的 `LANG_CODE` 和 `LANGNAME_DICT`。
 
-#### 获取系统状态
+## 语音识别模式表
 
-```http
-GET /api/v1/system/status
-```
+| 数值 | 模式名称 | 说明 |
+| --- | --- | --- |
+| 0 | faster-whisper(本地) | Faster-Whisper 本地推理 |
+| 1 | openai-whisper(本地) | OpenAI Whisper 本地模型 |
+| 2 | 阿里FunASR中文(本地) | FunASR 离线模型（部分模型仅支援中文/日韩） |
+| 3 | STT语音识别(本地) | 本地自定义 STT API |
+| 4 | 字节火山字幕生成 | VolcEngine 识别 |
+| 5 | Deepgram.com | Deepgram 语音识别 |
+| 6 | OpenAI语音识别 | OpenAI Speech-To-Text |
+| 7 | 自定义识别API | 自定义 HTTP |
+| 8 | Google识别API(免费) | Google Speech |
+| 9 | Gemini大模型识别 | Google Gemini |
+| 10 | Faster-Whisper-XXL.exe | Windows 专用加速版 |
+| 11 | 302.AI | 302.AI 语音识别 |
+| 12 | ElevenLabs.io | ElevenLabs 语音识别 |
+| 13 | Parakeet-tdt | 阿里 Parakeet |
+| 14 | 阿里百炼 Qwen3-ASR | Ali Qwen3 ASR |
 
-**响应示例**:
+各模式对语言、API Key 等有不同要求，请参考源码 `videotrans/recognition/__init__.py` 中的 `is_allow_lang` 与 `is_input_api` 逻辑。
 
-```json
-{
-  "success": true,
-  "version": "最新版本",
-  "system": {
-    "os": "Windows 10",
-    "python_version": "3.10.4",
-    "cpu_count": 8,
-    "memory_total": "16 GB",
-    "memory_available": "8 GB"
-  },
-  "gpu": {
-    "available": true,
-    "name": "NVIDIA RTX 3080",
-    "memory": "10 GB",
-    "cuda_version": "11.8"
-  },
-  "models": {
-    "loaded": ["small", "medium"],
-    "available": ["tiny", "base", "small", "medium", "large"]
-  }
-}
-```
+## 错误代码与排查
 
-#### 获取支持的语言
+| `code` | 场景 | 排查建议 |
+| --- | --- | --- |
+| 1 | 缺少或非法参数 | 核对请求字段与路径是否可访问 |
+| 3 | 任务执行失败 | 查看 `apidata/processinfo/<task_id>.json` 中的 `text` 字段 |
+| 4 | 语言不受支持 | 检查 `target_language`/`target_language_code` 与指定渠道的支持范围 |
+| 5 | 渠道未配置 | 在 GUI 中补充对应 API Key / URL |
+| -1 | 任务排队/执行中 | 使用 `msg` 了解当前阶段或排队顺序 |
 
-```http
-GET /api/v1/system/languages
-```
-
-**响应示例**:
-
-```json
-{
-  "success": true,
-  "languages": [
-    {
-      "code": "zh",
-      "name": "中文",
-      "english_name": "Chinese"
-    },
-    {
-      "code": "en",
-      "name": "English",
-      "english_name": "English"
-    }
-  ]
-}
-```
-
-#### 获取可用模型
-
-```http
-GET /api/v1/system/models
-```
-
-**响应示例**:
-
-```json
-{
-  "success": true,
-  "models": {
-    "speech_recognition": [
-      {
-        "name": "tiny",
-        "size": "64MB",
-        "languages": ["multilingual"],
-        "loaded": false
-      },
-      {
-        "name": "small",
-        "size": "415MB",
-        "languages": ["multilingual"],
-        "loaded": true
-      }
-    ],
-    "translation": [
-      {
-        "name": "google",
-        "type": "online",
-        "languages": 100
-      },
-      {
-        "name": "deepl",
-        "type": "online",
-        "languages": 30
-      }
-    ],
-    "text_to_speech": [
-      {
-        "name": "edge-tts",
-        "type": "online",
-        "voices": 200
-      }
-    ]
-  }
-}
-```
-
-## 批量处理 API
-
-### 批量翻译
-
-```http
-POST /api/v1/batch/translate
-Content-Type: application/json
-
-{
-  "files": [
-    "path/to/video1.mp4",
-    "path/to/video2.mp4"
-  ],
-  "output_dir": "path/to/output",
-  "config": {
-    "source_language": "zh",
-    "target_language": "en",
-    "model_name": "small"
-  }
-}
-```
-
-### 批量字幕生成
-
-```http
-POST /api/v1/batch/subtitles
-Content-Type: application/json
-
-{
-  "files": [
-    "path/to/audio1.wav",
-    "path/to/video2.mp4"
-  ],
-  "output_dir": "path/to/output",
-  "config": {
-    "model_name": "small",
-    "language": "auto",
-    "format": "srt"
-  }
-}
-```
-
-## 错误处理
-
-### 错误响应格式
-
-```json
-{
-  "success": false,
-  "error_code": "INVALID_FILE",
-  "message": "指定的文件不存在或无法访问",
-  "details": {
-    "file": "path/to/missing.mp4",
-    "timestamp": "2024-01-01T12:00:00Z"
-  }
-}
-```
-
-### 常见错误代码
-
-| 错误代码 | HTTP 状态码 | 描述 |
-|----------|-------------|------|
-| `INVALID_FILE` | 400 | 文件不存在或格式不支持 |
-| `INVALID_LANGUAGE` | 400 | 不支持的语言代码 |
-| `MODEL_NOT_FOUND` | 404 | 指定的模型未找到 |
-| `INSUFFICIENT_MEMORY` | 500 | 内存不足 |
-| `PROCESSING_ERROR` | 500 | 处理过程中发生错误 |
-| `NETWORK_ERROR` | 503 | 网络连接错误 |
-
-## 使用示例
-
-### Python 示例
+## Python 调用示例
 
 ```python
 import requests
-import json
 
-class PyVideoTransAPI:
-    def __init__(self, base_url="http://localhost:8080"):
-        self.base_url = base_url
-    
-    def translate_video(self, input_file, output_dir, source_lang, target_lang):
-        """翻译视频"""
-        url = f"{self.base_url}/api/v1/translate"
-        data = {
-            "input_file": input_file,
-            "output_dir": output_dir,
-            "source_language": source_lang,
-            "target_language": target_lang
-        }
-        
-        response = requests.post(url, json=data)
-        return response.json()
-    
-    def get_task_status(self, task_id):
-        """获取任务状态"""
-        url = f"{self.base_url}/api/v1/task/{task_id}"
-        response = requests.get(url)
-        return response.json()
-    
-    def speech_to_text(self, audio_file, language="auto"):
-        """语音转文字"""
-        url = f"{self.base_url}/api/v1/speech-to-text"
-        data = {
-            "input_file": audio_file,
-            "language": language,
-            "output_format": "srt"
-        }
-        
-        response = requests.post(url, json=data)
-        return response.json()
+BASE_URL = "http://127.0.0.1:9011"
 
-# 使用示例
-api = PyVideoTransAPI()
+def submit_job():
+    payload = {
+        "name": "C:/videos/demo.mp4",
+        "recogn_type": 0,
+        "model_name": "small",
+        "translate_type": 8,
+        "source_language": "zh-cn",
+        "target_language": "en",
+        "tts_type": 0,
+        "voice_role": "en-US-AriaNeural"
+    }
+    res = requests.post(f"{BASE_URL}/trans_video", json=payload, timeout=30)
+    res.raise_for_status()
+    return res.json()["task_id"]
 
-# 开始翻译任务
-result = api.translate_video(
-    input_file="example.mp4",
-    output_dir="./output",
-    source_lang="zh",
-    target_lang="en"
-)
+def wait_task(task_id):
+    while True:
+        data = requests.get(f"{BASE_URL}/task_status", params={"task_id": task_id}, timeout=15).json()
+        if data["code"] == 0:
+            print("任务完成", data["data"]["url"])
+            break
+        if data["code"] > 0:
+            raise RuntimeError(data["msg"])
+        print("进度:", data["msg"])
 
-if result["success"]:
-    task_id = result["task_id"]
-    print(f"任务已开始，ID: {task_id}")
-    
-    # 查询任务状态
-    status = api.get_task_status(task_id)
-    print(f"任务状态: {status['status']}")
+if __name__ == "__main__":
+    tid = submit_job()
+    wait_task(tid)
 ```
 
-### JavaScript 示例
+## 常见问题
 
-```javascript
-class PyVideoTransAPI {
-    constructor(baseUrl = 'http://localhost:8080') {
-        this.baseUrl = baseUrl;
-    }
-    
-    async translateVideo(inputFile, outputDir, sourceLang, targetLang) {
-        const response = await fetch(`${this.baseUrl}/api/v1/translate`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                input_file: inputFile,
-                output_dir: outputDir,
-                source_language: sourceLang,
-                target_language: targetLang
-            })
-        });
-        
-        return await response.json();
-    }
-    
-    async getTaskStatus(taskId) {
-        const response = await fetch(`${this.baseUrl}/api/v1/task/${taskId}`);
-        return await response.json();
-    }
-    
-    async speechToText(audioFile, language = 'auto') {
-        const response = await fetch(`${this.baseUrl}/api/v1/speech-to-text`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                input_file: audioFile,
-                language: language,
-                output_format: 'srt'
-            })
-        });
-        
-        return await response.json();
-    }
-}
-
-// 使用示例
-const api = new PyVideoTransAPI();
-
-async function translateExample() {
-    try {
-        const result = await api.translateVideo(
-            'example.mp4',
-            './output',
-            'zh',
-            'en'
-        );
-        
-        if (result.success) {
-            console.log(`任务已开始，ID: ${result.task_id}`);
-            
-            // 轮询任务状态
-            const checkStatus = async () => {
-                const status = await api.getTaskStatus(result.task_id);
-                console.log(`任务状态: ${status.status}`);
-                
-                if (status.status === 'processing') {
-                    setTimeout(checkStatus, 5000); // 5秒后再次检查
-                }
-            };
-            
-            checkStatus();
-        }
-    } catch (error) {
-        console.error('API 调用失败:', error);
-    }
-}
-```
-
-## 语言代码参考
-
-### 支持的语言代码
-
-| 语言 | 代码 | 语言 | 代码 |
-|------|------|------|------|
-| 中文(简体) | zh | 英语 | en |
-| 中文(繁体) | zh-TW | 日语 | ja |
-| 韩语 | ko | 法语 | fr |
-| 德语 | de | 西班牙语 | es |
-| 俄语 | ru | 意大利语 | it |
-| 葡萄牙语 | pt | 阿拉伯语 | ar |
-| 泰语 | th | 越南语 | vi |
-| 土耳其语 | tr | 荷兰语 | nl |
-
-## 服务提供商配置
-
-### 翻译服务
-
-| 服务商 | 代码 | 配置要求 |
-|--------|------|----------|
-| Google Translate | google | 无需配置 |
-| Microsoft Translator | microsoft | API Key |
-| DeepL | deepl | API Key |
-| ChatGPT | chatgpt | OpenAI API Key |
-| Azure AI | azure | Azure 订阅 |
-
-### 语音合成服务
-
-| 服务商 | 代码 | 配置要求 |
-|--------|------|----------|
-| Microsoft Edge TTS | edge-tts | 无需配置 |
-| Google TTS | google-tts | 无需配置 |
-| Azure AI TTS | azure-tts | Azure 订阅 |
-| OpenAI TTS | openai-tts | OpenAI API Key |
-| ElevenLabs | elevenlabs | API Key |
-
-## 限制和注意事项
-
-### 文件大小限制
-
-- 单个视频文件: 最大 2GB
-- 单个音频文件: 最大 500MB
-- 批量处理: 最大 10 个文件
-
-### 并发限制
-
-- 同时处理任务数: 最大 3 个
-- API 调用频率: 每分钟最大 100 次
-
-### 支持的文件格式
-
-**视频格式**:
-- MP4, AVI, MOV, MKV, FLV, WMV, 3GP
-
-**音频格式**:
-- MP3, WAV, FLAC, AAC, OGG, M4A
-
-**字幕格式**:
-- SRT, VTT, ASS, SSA
-
-## 更新日志
-
-### v3.80 (当前版本)
-- 新增批量处理 API
-- 改进错误处理机制
-- 优化性能和稳定性
-
-### v3.70
-- 新增系统信息 API
-- 支持更多语音合成服务
-- 修复已知问题
-
-## 获取帮助
-
-如果您在使用 API 时遇到问题：
-
-- [GitHub Issues](https://github.com/jianchang512/pyvideotrans/issues)
-- [Discord 社区](https://discord.gg/y9gUweVCCJ)
-- [官方文档](https://pyvideotrans.com)
+1. **任务目录为空？**
+   - 通常表示处理过程中断或失败。请检查 `/task_status` 返回的错误信息以及日志文件。
+2. **语言或渠道提示不支持？**
+   - 参考各渠道 `is_allow_lang` 定义，确保目标语言在支持列表内。
+3. **性能问题？**
+   - 对于本地模型，合理选择模型大小并开启 GPU；外部 API 需关注并发与速率限制。
 
 ---
 
-更多示例和详细说明，请参考项目的 GitHub 仓库和官方文档。
+建议在调用前同步查阅 GUI 中的配置说明或阅读相关源码，以确保参数与能力对齐。English reference will be updated同时，请关注 `docs/api/api.en.md` 的后续更新。

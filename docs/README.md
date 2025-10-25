@@ -17,7 +17,7 @@ PyVideoTrans 是一个开源的视频翻译和配音工具，致力于为用户�
 
 ## 🎬 演示视频
 
-[![PyVideoTrans 演示](https://img.youtube.com/vi/your-video-id/0.jpg)](https://www.youtube.com/watch?v=your-video-id)
+> 当前正在重制演示视频，敬请关注下一版更新。
 
 ## 🚀 快速开始
 
@@ -58,24 +58,26 @@ pip install -r requirements.txt
 python sp.py
 ```
 
-## 📖 详细文档
+## 📖 核心文档
 
-### 🚀 入门指南
-- [安装指南](guides/installation.md) - 详细的安装说明
-- [用户指南](guides/user-guide.md) - 完整使用教程
-- [常见问题](guides/faq.md) - 常见问题解答
+### 🚀 入门必读
+- [安装指南](guides/installation.md) — 支持 Windows/macOS/Linux 的详细说明
+- [用户指南](guides/user-guide.md) — 图形界面操作全流程
+- [常见问题](guides/faq.md) — 常见故障与排查建议
+- [模型下载](guides/model-download.md) — Faster-Whisper 等模型准备
 
 ### 🔧 服务配置
-- [OpenAI 配置](providers/openai.md) - ChatGPT 翻译和 TTS 配置
-- [Azure TTS 配置](providers/azure-tts.md) - Azure 语音服务配置
-- [DeepL 配置](providers/deepl.md) - DeepL 翻译服务配置
-- [Google Cloud TTS](providers/google-cloud-tts.md) - Google 云端语音合成配置（英文）
-- [Gemini 配置](providers/gemini.md) - Gemini 翻译渠道配置
+- [OpenAI 配置](providers/openai.md) — ChatGPT 翻译 / Whisper / OpenAI TTS
+- [Azure TTS 配置](providers/azure-tts.md) — 微软语音合成渠道
+- [DeepL 配置](providers/deepl.md) — 高质量文本翻译
+- [Google Cloud TTS](providers/google-cloud-tts.md) — Google 云语音合成（英文）
+- [Gemini 配置](providers/gemini.md) — Gemini 翻译与语音识别渠道
 
 ### 💻 开发者资源
-- [API 文档](api/api.md) - 完整的 API 参考
-- [贡献指南](contributing.md) - 参与项目开发
-- [更新日志](changelog.md) - 版本更新记录
+- [API 文档](api/api.md) — 基于 `api.py` 的本地 HTTP 接口指南
+- [贡献指南](contributing.md) — Issue / PR 流程与代码规范
+- [更新日志](changelog.md) — 版本演进记录
+- [关于项目](about.md) — 技术架构与目标
 
 ## 🌍 支持的语言
 
@@ -108,15 +110,17 @@ PyVideoTrans 支持超过 30 种语言：
 ## 📋 系统要求
 
 ### 最低要求
-- **操作系统**: Windows 10/11, macOS 10.15+, Ubuntu 18.04+
-- **内存**: 4GB (推荐 8GB)
-- **存储**: 2GB 可用空间
-- **网络**: 在线服务需要网络连接
+- **操作系统**：Windows 10/11、macOS 12+、Ubuntu 20.04+
+- **Python 环境**：3.10（推荐使用 `uv` 或 `venv`）
+- **显卡**：可选，CPU 单独即可运行基础模型
+- **存储**：至少 4 GB 空间（模型与缓存）
+- **网络**：调用在线渠道（OpenAI/DeepL/Gemini 等）需外网连通
 
-### 推荐配置
-- **内存**: 16GB 或更多
-- **GPU**: 支持 CUDA 的 NVIDIA 显卡或 Apple Silicon
-- **存储**: SSD 硬盘，10GB+ 可用空间
+### 建议配置
+- **内存**：16 GB 及以上
+- **GPU**：支持 CUDA 的 NVIDIA 显卡（>=6 GB）或 Apple Silicon GPU
+- **存储**：SSD，≥ 20 GB（大模型与批量任务）
+- **并发**：尽量为语音识别/翻译分配独立线程，减少 I/O 拖延
 
 ## 🛠️ 故障排除
 
