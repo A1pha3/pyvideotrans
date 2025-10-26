@@ -40,3 +40,24 @@
 1. 先完成系统总览与模块分层，配合示意图
 2. 再补充任务流时序与关键交互细节
 3. 最后整理扩展性章节，结合最佳实践
+
+## 端到端流程示意
+- 提交任务：GUI/CLI/API → `videotrans/task/job.py::submit`
+- 队列流转：`prepare_queue` → `trans_queue` → `dubb_queue` → `merge`
+- 核心阶段：识别(`_speech2text.py`) → 翻译(`_translate_srt.py`) → 配音(`_dubbing.py`) → 合成(`trans_create.py`)
+- 产物输出：`apidata/<task_id>/` 下生成 `.srt/.wav/.mp4` 等文件
+
+## 附录：关键代码索引
+- 任务调度与生命周期：`videotrans/task/job.py`, `videotrans/task/_base.py`
+- 识别实现：`videotrans/task/_speech2text.py`
+- 字幕翻译：`videotrans/task/_translate_srt.py`
+- 配音与语速：`videotrans/task/_dubbing.py`, `videotrans/task/_rate.py`
+- 合成与导出：`videotrans/task/trans_create.py`
+- 配置中心：`videotrans/configure/config.py`
+- TTS/翻译/识别渠道枚举：`videotrans/tts/__init__.py`, `videotrans/translator/__init__.py`, `videotrans/recognition/__init__.py`
+
+---
+
+延伸阅读：
+- [设计原则与技术取舍](design-principles.md)
+- [任务流水线深度解析](../internals/task-pipeline.md)

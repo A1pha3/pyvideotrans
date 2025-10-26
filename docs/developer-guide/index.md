@@ -39,3 +39,32 @@
 - 根据此结构逐章补充细节
 - 配合源码片段与流程图提升可读性
 - 视社区反馈迭代 FAQ 与最佳实践
+
+## 环境搭建步骤
+1. 克隆仓库并创建虚拟环境（推荐 uv/venv），安装依赖：`pip install -r requirements.txt`
+2. 准备 FFmpeg 与 Faster-Whisper 模型，放入 `models/`
+3. 如需在线服务，配置 `providers/*.md` 指引中的 API Key
+
+## 运行与调试
+- GUI：`python sp.py`
+- 本地 API：`python api.py`（默认 9011），可通过 `host.txt` 定制 `host:port`
+- 命令行：`python cli.py --help`
+- 日志位置：`logs/app-log-*.txt`；任务日志：`apidata/processinfo/<task_id>.json`
+
+## 代码风格约定
+- Python 版本 3.10+，遵循现有命名与 Docstring 习惯
+- 模块职责单一，跨模块交互以任务与队列为边界
+
+## 提交规范
+- 分支：feature/xxx、fix/xxx；提交信息遵循 Conventional Commits
+- 同步更新 `docs/changelog.md` 与 `version.json`（如适用）
+
+## 常用命令速查
+- 启动 GUI：`python sp.py`
+- 启动 API：`python api.py`
+- 提交视频翻译任务（示例见 API 文档 `/trans_video`）
+
+## 深入阅读
+- [调试与排错手册](debugging.md)
+- [源码导读规划](../internals/index.md)
+- [任务流水线深度解析](../internals/task-pipeline.md)

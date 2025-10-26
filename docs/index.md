@@ -15,6 +15,7 @@
 - [macOS 安装](guides/installation-macos.md) - macOS 系统安装指南  
 - [Linux 安装](guides/installation-linux.md) - Linux 系统安装指南
 - [模型下载](guides/model-download.md) - 语音识别模型下载
+- [视频翻译实战](guides/voice-translation.md) - 从零到交付的全流程
 - [语言包](guides/language-packs.md) - 多语言支持说明
 
 ### 🔧 服务配置
@@ -26,15 +27,23 @@
 
 ### 💻 开发者资源
 - [API 文档](api/api.md) - 完整的 API 参考
-- [API 文档 (English)](api/api.en.md) - English API Reference
-- [贡献指南](contributing.md) - 如何参与项目开发
+- [API 文档 (English)](api/api-en.md) - English API Reference
+- [架构文档](architecture/index.md) - 模块分层、任务流与关键索引
+- [设计原则](architecture/design-principles.md) - 关键设计取舍与扩展点
+- [开发者指南](developer-guide/index.md) - 开发环境、运行与提交规范
+- [调试与排错](developer-guide/debugging.md) - 日志、常见问题与工具链
+- [源码导读](internals/index.md) - 关键模块与典型调用链
 - [关于项目](about.md) - 项目详细信息
 
+### 🧪 教程与实战
+- [快速上手：英译中视频](tutorials/quickstart-video-translation.md)
+- [实战：字幕批量中文配音](tutorials/batch-subtitle-tts.md)
+
 ### 🌍 多语言文档
-- [English Documentation](locales/en/readme.md)
-- [Documentación en Español](locales/es/readme.md)
-- [Documentação em Português](locales/pt-br/readme.md)
-- [Documentazione Italiana](locales/it/readme.md)
+- [English Documentation](locales/en/index.md)
+- [Documentación en Español](locales/es/index.md)
+- [Documentação em Português](locales/pt-br/index.md)
+- [Documentazione Italiana](locales/it/index.md)
 
 ## 🎯 根据需求选择文档
 
@@ -95,11 +104,14 @@ docs/
 │   ├── openai.md                # OpenAI 配置
 │   ├── azure-tts.md             # Azure TTS 配置
 │   └── deepl.md                 # DeepL 配置
+├── internals/                # 源码导读
+│   ├── index.md              # 源码导读
+│   └── task-pipeline.md      # 任务流水线
 └── locales/                     # 多语言文档
-    ├── en/readme.md             # 英文
-    ├── es/readme.md             # 西班牙文
-    ├── pt-br/readme.md          # 葡萄牙文
-    └── it/readme.md             # 意大利文
+    ├── en/index.md              # 英文
+    ├── es/index.md              # 西班牙文
+    ├── pt-br/index.md           # 葡萄牙文
+    └── it/index.md              # 意大利文
 ```
 
 ## 💡 使用建议

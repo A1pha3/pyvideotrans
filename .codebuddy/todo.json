@@ -13,7 +13,7 @@
     {
       "id": "task-3",
       "content": "撰写架构与设计文档",
-      "status": "todo"
+      "status": "in_progress"
     },
     {
       "id": "task-4",
@@ -24,6 +24,21 @@
       "id": "task-5",
       "content": "整理教程示例文档与案例",
       "status": "todo"
+    },
+    {
+      "id": "task-6",
+      "content": "完善视频翻译功能的全流程文档",
+      "status": "done"
+    },
+    {
+      "id": "task-7",
+      "content": "新增高级技巧与故障排除章节",
+      "status": "done"
+    },
+    {
+      "id": "task-8",
+      "content": "补充实战案例与推荐配置表",
+      "status": "done"
     }
   ]
 }

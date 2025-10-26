@@ -368,4 +368,4 @@ if __name__ == "__main__":
 
 ---
 
-建议在调用前同步查阅 GUI 中的配置说明或阅读相关源码，以确保参数与能力对齐。English reference will be updated同时，请关注 `docs/api/api.en.md` 的后续更新。
+建议在调用前同步查阅 GUI 中的配置说明或阅读相关源码，以确保参数与能力对齐。English reference will be updated同时，请关注 `docs/api/api-en.md` 的后续更新。

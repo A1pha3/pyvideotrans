@@ -1,6 +1,6 @@
 # PyVideoTrans - Herramienta de Traducción y Doblaje de Videos
 
-[中文](../../README.md) | [English](../en/readme.md) | [Português](../pt-br/readme.md) | [Italiano](../it/readme.md)
+[中文](../../README.md) | [English](../en/index.md) | [Português](../pt-br/index.md) | [Italiano](../it/index.md)
 
 PyVideoTrans es una herramienta de código abierto para traducción y doblaje de videos que proporciona soluciones de procesamiento de video multilingüe de alta calidad.
 

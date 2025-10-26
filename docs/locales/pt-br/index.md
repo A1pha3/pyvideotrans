@@ -1,6 +1,6 @@
 # PyVideoTrans - Ferramenta de Tradução e Dublagem de Vídeos
 
-[中文](../../README.md) | [English](../en/readme.md) | [Español](../es/readme.md) | [Italiano](../it/readme.md)
+[中文](../../README.md) | [English](../en/index.md) | [Español](../es/index.md) | [Italiano](../it/index.md)
 
 PyVideoTrans é uma ferramenta de código aberto para tradução e dublagem de vídeos que fornece soluções de processamento de vídeo multilíngue de alta qualidade.
 
@@ -168,7 +168,7 @@ pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-hos
 ```
 
 #### FFmpeg Não Encontrado
-- **Windows**: Baixe do [site oficial do FFmpeg](https://ffmpeg.org/download.html)
+- **Windows**: Baixe do [site oficial do FFmpeg](https://ffmpeg.org/download.html) ou use o [link de download direto](https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2023-11-30-12-55/ffmpeg-n6.0.1-win64-gpl-6.0.zip)
 - **macOS**: `brew install ffmpeg`
 - **Linux**: `sudo apt install ffmpeg` (Ubuntu/Debian)
 
@@ -176,6 +176,41 @@ pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-hos
 - Certifique-se de que os drivers CUDA estejam instalados para GPUs NVIDIA
 - Verifique a compatibilidade da GPU com PyTorch
 - Verifique a disponibilidade de memória da GPU
+
+### Download de Modelos
+
+Para sua conveniência, você pode baixar todos os modelos de reconhecimento de voz em um único arquivo:
+
+- **Baixar todos os modelos de reconhecimento de voz:** [https://github.com/jianchang512/stt/releases/tag/0.0](https://github.com/jianchang512/stt/releases/tag/0.0)
+
+#### Modelos Faster Whisper
+
+| Nome do Modelo | Tamanho | Link para Download |
+| :------------- | :------ | :----------------- |
+| tiny | 64MB | [GitHub Link](https://github.com/jianchang512/stt/releases/download/0.0/faster-tiny.7z) |
+| small | 415MB | [GitHub Link](https://github.com/jianchang512/stt/releases/download/0.0/faster-small.7z) |
+| medium | 1.27G | [GitHub Link](https://github.com/jianchang512/stt/releases/download/0.0/faster-medium.7z) |
+
+#### Modelos OpenAI Whisper
+
+| Nome do Modelo | Tamanho | Link para Download |
+| :-------------- | :----------- | :------------------------------------------------------------------------------------------------- |
+| tiny | 66 MB | [Download Link](https://openaipublic.azureedge.net/main/whisper/models/65147644a518d12f04e32d6f3b26facc3f8dd46e5390956a9424a650c0ce22b9/tiny.pt) |
+| small | 500 MB | [Download Link](https://openaipublic.azureedge.net/main/whisper/models/9ecf779972d90ba49c06d968637d720dd632c55bbf19d441fb42bf17a411e794/small.pt) |
+| medium | 1.5 GB | [Download Link](https://openaipublic.azureedge.net/main/whisper/models/345ae4da62f9b3d59415adc60127b97c714f32e89e936602e85993674d08dcb1/medium.pt) |
+
+### Pacotes de Idiomas
+
+Para adicionar suporte a novos idiomas na interface, execute o seguinte código para verificar o código de idioma atual:
+
+```python
+import locale
+locale.getdefaultlocale()[0]
+```
+
+Pegue os 2 primeiros caracteres da saída, coloque-os em minúsculas e adicione `.json` para criar o arquivo de idioma. Por exemplo, se a saída for `pt_BR`, crie `pt.json` no diretório `videotrans/language`.
+
+Já existem dois arquivos de idioma: `en.json` e `zh.json`. Você pode copiá-los e modificar os nomes para criar novos arquivos de idioma.
 
 ### Otimização de Performance
 

@@ -6,9 +6,9 @@
 
 OpenAI 提供了多种 AI 服务，PyVideoTrans 支持以下功能：
 
-- **ChatGPT 翻译**: 使用 GPT 模型进行高质量文本翻译
-- **OpenAI TTS**: 高质量的文本转语音服务
-- **Whisper API**: 云端语音识别服务（可选）
+- **ChatGPT 翻译**: 使用 GPT 模型进行高质量文本翻译（翻译渠道编号：8）
+- **OpenAI TTS**: 高质量的文本转语音服务（TTS 渠道编号：8）
+- **OpenAI 语音识别**: 云端语音识别服务（识别模式编号：6）
 
 ## 获取 API Key
 
@@ -36,7 +36,7 @@ OpenAI 提供了多种 AI 服务，PyVideoTrans 支持以下功能：
 
 ### 基本配置
 
-1. 在 PyVideoTrans 中选择翻译服务为 "ChatGPT"
+1. 在 PyVideoTrans 中选择翻译服务为 "OpenAI ChatGPT"（渠道编号：8）
 2. 在设置中输入您的 OpenAI API Key
 3. 选择合适的模型和参数
 
@@ -92,7 +92,7 @@ PyVideoTrans 使用优化的提示词来确保翻译质量：
 
 ### 基本配置
 
-1. 在语音合成设置中选择 "OpenAI TTS"
+1. 在语音合成设置中选择 "OpenAI TTS"（渠道编号：8）
 2. 输入 OpenAI API Key
 3. 选择语音模型和声音
 
@@ -129,13 +129,13 @@ PyVideoTrans 使用优化的提示词来确保翻译质量：
 - `response_format`: 输出格式 (mp3, opus, aac, flac)
 - `speed`: 语速 (0.25-4.0)，1.0 为正常速度
 
-## 使用 Whisper API
+## 配置 OpenAI 语音识别
 
-### 配置方法
+### 基本配置
 
-1. 在语音识别设置中选择 "OpenAI Whisper API"
-2. 输入 API Key
-3. 选择模型和参数
+1. 在语音识别设置中选择 "OpenAI语音识别"（模式编号：6）
+2. 输入 OpenAI API Key
+3. 选择语言和参数
 
 ### 支持的模型
 
@@ -151,6 +151,42 @@ PyVideoTrans 使用优化的提示词来确保翻译质量：
   "language": "auto",
   "temperature": 0,
   "response_format": "srt"
+}
+```
+
+## API 调用示例
+
+### 翻译接口
+
+```json
+POST /translate_srt
+{
+  "name": "C:/videos/lecture.srt",
+  "translate_type": 8,
+  "target_language": "en"
+}
+```
+
+### TTS 接口
+
+```json
+POST /tts
+{
+  "name": "C:/videos/sample.srt",
+  "tts_type": 8,
+  "voice_role": "nova",
+  "target_language_code": "en"
+}
+```
+
+### 语音识别接口
+
+```json
+POST /recogn
+{
+  "name": "C:/videos/talk.mp4",
+  "recogn_type": 6,
+  "detect_language": "ja"
 }
 ```
 
